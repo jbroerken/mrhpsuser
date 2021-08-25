@@ -31,7 +31,6 @@ project(mrhpsuser VERSION 1.0
                   DESCRIPTION "MRH user info platform service executable"
                   LANGUAGES CXX)
 
-
 #########################################################################
 #
 #  PATHS
@@ -76,12 +75,12 @@ set(SRC_LIST_CALLBACK "${SRC_DIR_PATH}/Callback/Service/CBAvail.cpp"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.h")
    
 set(SRC_LIST_CONTENT "${SRC_DIR_PATH}/Content/Content.cpp"
-					 "${SRC_DIR_PATH}/Content/Content.h"
-					 "${SRC_DIR_PATH}/Content/ContentPaths.h")
+                     "${SRC_DIR_PATH}/Content/Content.h"
+                     "${SRC_DIR_PATH}/Content/ContentPaths.h")
                                         
 set(SRC_LIST_SERVICE "${SRC_DIR_PATH}/Exception.h"
-					 "${SRC_DIR_PATH}/Revision.h"
-					 "${SRC_DIR_PATH}/Main.cpp")
+                     "${SRC_DIR_PATH}/Revision.h"
+                     "${SRC_DIR_PATH}/Main.cpp")
 
 ###
 #  Library Paths
@@ -94,15 +93,14 @@ set(LIB_DIR_PATH "${CMAKE_SOURCE_DIR}/lib/")
 set(INCLUDE_DIR_PATH "${CMAKE_SOURCE_DIR}/include/")
 
 set(LIB_BIN_LIST "${LIB_DIR_PATH}/libmrhev.a"
-				 "${LIB_DIR_PATH}/libmrhcevs.a"
-				 "${LIB_DIR_PATH}/libmrhbf.a"
-				 "${LIB_DIR_PATH}/libmrhpsb.a")
+                 "${LIB_DIR_PATH}/libmrhcevs.a"
+                 "${LIB_DIR_PATH}/libmrhbf.a"
+                 "${LIB_DIR_PATH}/libmrhpsb.a")
 set(LIB_INCLUDE_LIST "${INCLUDE_DIR_PATH}/mrhshared"
-					 "${INCLUDE_DIR_PATH}/libmrhev"
-					 "${INCLUDE_DIR_PATH}/libmrhcevs"
-					 "${INCLUDE_DIR_PATH}/libmrhbf"
-					 "${INCLUDE_DIR_PATH}/libmrhpsb")
-
+                     "${INCLUDE_DIR_PATH}/libmrhev"
+                     "${INCLUDE_DIR_PATH}/libmrhcevs"
+                     "${INCLUDE_DIR_PATH}/libmrhbf"
+                     "${INCLUDE_DIR_PATH}/libmrhpsb")
 
 #########################################################################
 #
@@ -119,10 +117,10 @@ add_executable(mrhpsuser ${SRC_LIST_CALLBACK}
                          ${SRC_LIST_CONTENT}
                          ${SRC_LIST_SERVICE})
 set_target_properties(mrhpsuser
-    		          PROPERTIES
-    		          ARCHIVE_OUTPUT_DIRECTORY ${BIN_DIR_PATH}
-    		          LIBRARY_OUTPUT_DIRECTORY ${BIN_DIR_PATH}
-    		          RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR_PATH})
+                      PROPERTIES
+                      ARCHIVE_OUTPUT_DIRECTORY ${BIN_DIR_PATH}
+                      LIBRARY_OUTPUT_DIRECTORY ${BIN_DIR_PATH}
+                      RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR_PATH})
 
 ###
 #  Required Libraries

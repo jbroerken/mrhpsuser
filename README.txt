@@ -70,6 +70,4 @@ Directory List:
 bin: Contains the built project executables.
 build: CMake build directory.
 doc: Documentation files.
-include: Library header files used by the project.
-lib: Library files used by the project.
 src: Project source code.

@@ -34,31 +34,31 @@
 //*************************************************************************************
 
 #ifndef MRH_PACKAGE_USER_DIRECTORY_SOURCE
-    #define MRH_PACKAGE_USER_DIRECTORY_SOURCE "/var/mrhpsuser/_User"
+    #define MRH_PACKAGE_USER_DIRECTORY_SOURCE "/var/mrh/mrhpsuser/_User"
 #endif
 #ifndef MRH_USER_DOCUMENTS_SOURCE_PATH
-    #define MRH_USER_DOCUMENTS_SOURCE_PATH "/home/owner/Documents"
+    #define MRH_USER_DOCUMENTS_SOURCE_PATH "/var/mrh/mrhpsuser/Documents"
 #endif
 #ifndef MRH_USER_PICTURES_SOURCE_PATH
-    #define MRH_USER_PICTURES_SOURCE_PATH "/home/owner/Pictures"
+    #define MRH_USER_PICTURES_SOURCE_PATH "/var/mrh/mrhpsuser/Pictures"
 #endif
 #ifndef MRH_USER_VIDEOS_SOURCE_PATH
-    #define MRH_USER_VIDEOS_SOURCE_PATH "/home/owner/Videos"
+    #define MRH_USER_VIDEOS_SOURCE_PATH "/var/mrh/mrhpsuser/Videos"
 #endif
 #ifndef MRH_USER_MUSIC_SOURCE_PATH
-    #define MRH_USER_MUSIC_SOURCE_PATH "/home/owner/Music"
+    #define MRH_USER_MUSIC_SOURCE_PATH "/var/mrh/mrhpsuser/Music"
 #endif
 #ifndef MRH_USER_DOWNLOADS_SOURCE_PATH
-    #define MRH_USER_DOWNLOADS_SOURCE_PATH "/home/owner/Downloads"
+    #define MRH_USER_DOWNLOADS_SOURCE_PATH "/var/mrh/mrhpsuser/Downloads"
 #endif
 #ifndef MRH_USER_CLIPBOARD_SOURCE_PATH
-    #define MRH_USER_CLIPBOARD_SOURCE_PATH "/home/owner/Clipboard/Clipboard.txt"
+    #define MRH_USER_CLIPBOARD_SOURCE_PATH "/var/mrh/mrhpsuser/Clipboard/Clipboard.txt"
 #endif
 #ifndef MRH_USER_INFO_PERSON_SOURCE_PATH
-    #define MRH_USER_INFO_PERSON_SOURCE_PATH "/etc/MRH_User/MRH_UserPerson.conf"
+    #define MRH_USER_INFO_PERSON_SOURCE_PATH "/var/mrh/mrhpsuser/MRH_UserPerson.conf"
 #endif
 #ifndef MRH_USER_INFO_RESIDENCE_SOURCE_PATH
-    #define MRH_USER_INFO_RESIDENCE_SOURCE_PATH "/etc/MRH_User/MRH_UserResidence.conf"
+    #define MRH_USER_INFO_RESIDENCE_SOURCE_PATH "/var/mrh/mrhpsuser/MRH_UserResidence.conf"
 #endif
 
 //*************************************************************************************
@@ -68,28 +68,28 @@
 #define MRH_PACKAGE_USER_DIRECTORY_LINK "FSRoot/_User" // Relative, combined with package path
 
 #ifndef MRH_USER_DOCUMENTS_LINK_PATH
-    #define MRH_USER_DOCUMENTS_LINK_PATH "/var/mrhpsuser/_User/Documents"
+    #define MRH_USER_DOCUMENTS_LINK_PATH "/var/mrh/mrhpsuser/_User/Documents"
 #endif
 #ifndef MRH_USER_PICTURES_LINK_PATH
-    #define MRH_USER_PICTURES_LINK_PATH "/var/mrhpsuser/_User/Pictures"
+    #define MRH_USER_PICTURES_LINK_PATH "/var/mrh/mrhpsuser/_User/Pictures"
 #endif
 #ifndef MRH_USER_VIDEOS_LINK_PATH
-    #define MRH_USER_VIDEOS_LINK_PATH "/var/mrhpsuser/_User/Videos"
+    #define MRH_USER_VIDEOS_LINK_PATH "/var/mrh/mrhpsuser/_User/Videos"
 #endif
 #ifndef MRH_USER_MUSIC_LINK_PATH
-    #define MRH_USER_MUSIC_LINK_PATH "/var/mrhpsuser/_User/Music"
+    #define MRH_USER_MUSIC_LINK_PATH "/var/mrh/mrhpsuser/_User/Music"
 #endif
 #ifndef MRH_USER_DOWNLOADS_LINK_PATH
-    #define MRH_USER_DOWNLOADS_LINK_PATH "/var/mrhpsuser/_User/Downloads"
+    #define MRH_USER_DOWNLOADS_LINK_PATH "/var/mrh/mrhpsuser/_User/Downloads"
 #endif
 #ifndef MRH_USER_CLIPBOARD_LINK_PATH
-    #define MRH_USER_CLIPBOARD_LINK_PATH "/var/mrhpsuser/_User/Clipboard.txt"
+    #define MRH_USER_CLIPBOARD_LINK_PATH "/var/mrh/mrhpsuser/_User/Clipboard.txt"
 #endif
 #ifndef MRH_USER_INFO_PERSON_LINK_PATH
-    #define MRH_USER_INFO_PERSON_LINK_PATH "/var/mrhpsuser/_User/MRH_UserPerson.conf"
+    #define MRH_USER_INFO_PERSON_LINK_PATH "/var/mrh/mrhpsuser/_User/MRH_UserPerson.conf"
 #endif
 #ifndef MRH_USER_INFO_RESIDENCE_LINK_PATH
-    #define MRH_USER_INFO_RESIDENCE_LINK_PATH "/var/mrhpsuser/_User/MRH_UserResidence.conf"
+    #define MRH_USER_INFO_RESIDENCE_LINK_PATH "/var/mrh/mrhpsuser/_User/MRH_UserResidence.conf"
 #endif
 
 

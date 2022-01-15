@@ -23,6 +23,13 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 14)
 
 ###
+#  CMake Options
+#  -------------
+#  Options to use when building with CMake.
+###
+option(USE_SERVER "Enable server based location recieving" ON)
+
+###
 #  Project Info
 #  ------------
 #  General simple information about our project.
@@ -72,12 +79,20 @@ set(SRC_LIST_CALLBACK "${SRC_DIR_PATH}/Callback/Service/CBAvail.cpp"
                       "${SRC_DIR_PATH}/Callback/Content/CBAccessClear.h"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.cpp"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.h")
+                      
+if(USE_SERVER MATCHES ON)
+    set(SRC_LIST_CALLBACK ${SRC_LIST_CALLBACK}
+                          "${SRC_DIR_PATH}/Callback/Location/Server.cpp"
+                          "${SRC_DIR_PATH}/Callback/Location/Server.h")
+endif()
    
 set(SRC_LIST_CONTENT "${SRC_DIR_PATH}/Content/Content.cpp"
                      "${SRC_DIR_PATH}/Content/Content.h"
                      "${SRC_DIR_PATH}/Content/ContentPaths.h")
                                         
-set(SRC_LIST_SERVICE "${SRC_DIR_PATH}/Exception.h"
+set(SRC_LIST_SERVICE "${SRC_DIR_PATH}/Configuration.cpp"
+                     "${SRC_DIR_PATH}/Configuration.h"
+                     "${SRC_DIR_PATH}/Exception.h"
                      "${SRC_DIR_PATH}/Revision.h"
                      "${SRC_DIR_PATH}/Main.cpp")
 
@@ -110,11 +125,28 @@ find_library(libmrhev NAMES mrhev REQUIRED)
 find_library(libmrhcevs NAMES mrhcevs REQUIRED)
 find_library(libmrhpsb NAMES mrhpsb REQUIRED)
 
+if(USE_SERVER MATCHES ON)
+    find_library(libmsquic NAMES msquic REQUIRED)
+    find_library(libsodium NAMES sodium REQUIRED)
+    find_library(libmrhsrv NAMES mrhsrv REQUIRED)
+endif()
+
 target_link_libraries(mrhpsuser PUBLIC Threads::Threads)
 target_link_libraries(mrhpsuser PUBLIC mrhbf)
 target_link_libraries(mrhpsuser PUBLIC mrhev)
 target_link_libraries(mrhpsuser PUBLIC mrhcevs)
 target_link_libraries(mrhpsuser PUBLIC mrhpsb)
+
+if(USE_SERVER MATCHES ON)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        target_link_libraries(mrhpsuser PUBLIC
+                              "-framework CoreFoundation"
+                              "-framework Security")
+    endif()
+    target_link_libraries(mrhpsuser PUBLIC msquic)
+    target_link_libraries(mrhpsuser PUBLIC sodium)
+    target_link_libraries(mrhpsuser PUBLIC mrhsrv)
+endif()
 
 ###
 #  Source Definitions
@@ -122,6 +154,7 @@ target_link_libraries(mrhpsuser PUBLIC mrhpsb)
 #  Preprocessor source definitions.
 ###
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_SERVICE_THREAD_COUNT=1)
+target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CONFIGURATION_PATH="/usr/local/etc/mrh/mrhpservice/User.conf")
 
 target_compile_definitions(mrhpsuser PRIVATE MRH_PACKAGE_USER_DIRECTORY_SOURCE="/var/mrh/mrhpsuser/_User")
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOCUMENTS_SOURCE_PATH="/var/mrh/mrhpsuser/Documents")
@@ -141,6 +174,12 @@ target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOWNLOADS_LINK_PATH="/var/
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CLIPBOARD_LINK_PATH="/var/mrh/mrhpsuser/_User/Clipboard.txt")
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_PERSON_LINK_PATH="/var/mrh/mrhpsuser/_User/MRH_UserPerson.conf")
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_RESIDENCE_LINK_PATH="/var/mrh/mrhpsuser/_User/MRH_UserResidence.conf")
+
+if(USE_SERVER MATCHES ON)
+    target_compile_definitions(mrhpsuser PRIVATE MRH_USER_LOCATION_USE_SERVER=1)
+else()
+    target_compile_definitions(mrhpsuser PRIVATE MRH_USER_LOCATION_USE_SERVER=0)
+endif()
 
 ###
 #  Install

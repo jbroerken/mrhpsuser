@@ -33,6 +33,7 @@
 #include "./Callback/Content/CBAccessClear.h"
 #include "./Callback/Location/CBGetLocation.h"
 #include "./Content/Content.h"
+#include "./Configuration.h"
 #include "./Revision.h"
 
 // Pre-defined
@@ -73,6 +74,9 @@ int main(int argc, const char* argv[])
     
     try
     {
+#if MRH_USER_LOCATION_USE_SERVER > 0
+        Configuration::Singleton().Load();
+#endif
         p_Context = new libmrhpsb("mrhpsuser",
                                   argc,
                                   argv,

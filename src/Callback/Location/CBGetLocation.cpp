@@ -32,7 +32,11 @@
 // Constructor / Destructor
 //*************************************************************************************
 
-CBGetLocation::CBGetLocation() noexcept
+#if MRH_USER_LOCATION_USE_SERVER > 0
+CBGetLocation::CBGetLocation() : c_Server()
+#else
+CBGetLocation::CBGetLocation()
+#endif
 {}
 
 CBGetLocation::~CBGetLocation() noexcept
@@ -46,7 +50,26 @@ void CBGetLocation::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) 
 {
     try
     {
+#if MRH_USER_LOCATION_USE_SERVER > 0
+        MRH_Sfloat32 f32_Latitude;
+        MRH_Sfloat32 f32_Longtitude;
+        MRH_Sfloat32 f32_Elevation;
+        MRH_Sfloat32 f32_Facing;
+        
+        c_Server.GetLocation(f32_Latitude,
+                             f32_Longtitude,
+                             f32_Elevation,
+                             f32_Facing);
+        
+        MRH_EventStorage::Singleton().Add(MRH_U_GET_LOCATION_S(true,
+                                                               f32_Latitude,
+                                                               f32_Longtitude,
+                                                               f32_Elevation,
+                                                               f32_Facing),
+                                          u32_GroupID);
+#else
         MRH_EventStorage::Singleton().Add(MRH_U_GET_LOCATION_S(false), u32_GroupID);
+#endif
     }
     catch (MRH_PSBException& e)
     {

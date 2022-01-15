@@ -29,6 +29,9 @@
 #include <libmrhpsb/MRH_Callback.h>
 
 // Project
+#if MRH_USER_LOCATION_USE_SERVER > 0
+#include "./Server.h"
+#endif
 
 
 class CBGetLocation : public MRH_Callback
@@ -43,7 +46,7 @@ public:
      *  Default constructor.
      */
     
-    CBGetLocation() noexcept;
+    CBGetLocation();
     
     /**
      *  Default destructor.
@@ -69,6 +72,10 @@ private:
     //*************************************************************************************
     // Data
     //*************************************************************************************
+    
+#if MRH_USER_LOCATION_USE_SERVER > 0
+    Server c_Server;
+#endif
     
 protected:
 

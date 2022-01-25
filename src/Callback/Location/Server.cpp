@@ -675,10 +675,10 @@ int Server::RecieveMessage(MRH_Srv_Server* p_Server, int i_State) noexcept
             
             std::lock_guard<std::mutex> c_Guard(c_LocationMutex);
             
-            f32_Latitude = c_Location.f32_Latitude;
-            f32_Longtitude = c_Location.f32_Longtitude;
-            f32_Elevation = c_Location.f32_Elevation;
-            f32_Facing = c_Location.f32_Facing;
+            f64_Latitude = c_Location.f32_Latitude;
+            f64_Longtitude = c_Location.f32_Longtitude;
+            f64_Elevation = c_Location.f32_Elevation;
+            f64_Facing = c_Location.f32_Facing;
             
             break;
         }
@@ -760,12 +760,12 @@ bool Server::SendMessage(MRH_Srv_Server* p_Server, int i_State) noexcept
 // Getters
 //*************************************************************************************
 
-void Server::GetLocation(MRH_Sfloat32& f32_Latitude, MRH_Sfloat32& f32_Longtitude, MRH_Sfloat32& f32_Elevation, MRH_Sfloat32& f32_Facing)
+void Server::GetLocation(MRH_Sfloat64& f64_Latitude, MRH_Sfloat64& f64_Longtitude, MRH_Sfloat64& f64_Elevation, MRH_Sfloat64& f64_Facing) noexcept
 {
     std::lock_guard<std::mutex> c_Guard(c_LocationMutex);
     
-    f32_Latitude = this->f32_Latitude;
-    f32_Longtitude = this->f32_Longtitude;
-    f32_Elevation = this->f32_Elevation;
-    f32_Facing = this->f32_Facing;
+    f64_Latitude = this->f64_Latitude;
+    f64_Longtitude = this->f64_Longtitude;
+    f64_Elevation = this->f64_Elevation;
+    f64_Facing = this->f64_Facing;
 }

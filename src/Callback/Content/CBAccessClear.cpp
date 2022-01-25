@@ -42,9 +42,10 @@ CBAccessClear::~CBAccessClear() noexcept
 // Callback
 //*************************************************************************************
 
-void CBAccessClear::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept
+void CBAccessClear::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
-    bool b_Result = false;
+    MRH_EvD_U_AccessClear_S c_Data;
+    c_Data.u8_Result = MRH_EVD_BASE_RESULT_FAILED;
     
     // Reset happened? Needed for package info
     if (p_Content->GetReset() == true)
@@ -52,7 +53,7 @@ void CBAccessClear::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) 
         try
         {
             p_Content->ClearAccess();
-            b_Result = true;
+            c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
         }
         catch (Exception& e)
         {
@@ -61,14 +62,26 @@ void CBAccessClear::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) 
         }
     }
     
+    
+    MRH_Event* p_Result = MRH_EVD_CreateSetEvent(MRH_EVENT_USER_ACCESS_CLEAR_S, &c_Data);
+    
+    if (p_Result == NULL)
+    {
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to create response event!",
+                                       "CBAccessClear.cpp", __LINE__);
+        return;
+    }
+    
+    p_Result->u32_GroupID = u32_GroupID;
+    
     try
     {
-        MRH_U_ACCESS_CLEAR_S c_Result(b_Result);
-        MRH_EventStorage::Singleton().Add(c_Result, u32_GroupID);
+        MRH_EventStorage::Singleton().Add(p_Result);
     }
     catch (MRH_PSBException& e)
     {
         MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
                                        "CBAccessClear.cpp", __LINE__);
+        MRH_EVD_DestroyEvent(p_Result);
     }
 }

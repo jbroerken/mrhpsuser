@@ -42,14 +42,24 @@ CBReset::~CBReset() noexcept
 // Callback
 //*************************************************************************************
 
-void CBReset::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept
+void CBReset::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
+    // Get package path
+    MRH_EvD_Sys_ResetRequest_U c_Data;
+    
+    if (MRH_EVD_ReadEvent(&c_Data, MRH_EVENT_PS_RESET_REQUEST_U, p_Event) < 0)
+    {
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to read event data!",
+                                       "CBReset.cpp", __LINE__);
+        return;
+    }
+    
     // Reset in individual try-catch blocks so both will be performed
     try
     {
         try
         {
-            p_Content->Reset(static_cast<const MRH_SYS_PS_RESET_REQUEST_U*>(p_Event)->GetString());
+            p_Content->Reset(c_Data.p_PackagePath);
         }
         catch (...)
         {

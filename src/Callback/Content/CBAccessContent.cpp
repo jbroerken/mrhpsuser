@@ -42,95 +42,57 @@ CBAccessContent::~CBAccessContent() noexcept
 // Callback
 //*************************************************************************************
 
-bool CBAccessContent::CreateAccess(MRH_Uint32 u32_Type) noexcept
+void CBAccessContent::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
-    bool b_Result = true;
+    MRH_Uint32 u32_ResponseType = MRH_EVENT_UNK;
+    
+    MRH_EvD_Base_Result_t c_Data;
+    c_Data.u8_Result = MRH_EVD_BASE_RESULT_FAILED;
     
     try
     {
-        switch (u32_Type)
+        switch (p_Event->u32_Type)
         {
             case MRH_EVENT_USER_ACCESS_DOCUMENTS_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_DOCUMENTS_S;
                 p_Content->AllowAccess(Content::DOCUMENTS);
                 break;
             case MRH_EVENT_USER_ACCESS_PICTURES_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_PICTURES_S;
                 p_Content->AllowAccess(Content::PICTURES);
                 break;
             case MRH_EVENT_USER_ACCESS_MUSIC_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_MUSIC_S;
                 p_Content->AllowAccess(Content::MUSIC);
                 break;
             case MRH_EVENT_USER_ACCESS_VIDEOS_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_VIDEOS_S;
                 p_Content->AllowAccess(Content::VIDEOS);
                 break;
             case MRH_EVENT_USER_ACCESS_DOWNLOADS_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_DOWNLOADS_S;
                 p_Content->AllowAccess(Content::DOWNLOADS);
                 break;
             case MRH_EVENT_USER_ACCESS_CLIPBOARD_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_CLIPBOARD_S;
                 p_Content->AllowAccess(Content::CLIPBOARD);
                 break;
             case MRH_EVENT_USER_ACCESS_INFO_PERSON_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_INFO_PERSON_S;
                 p_Content->AllowAccess(Content::INFO_PERSON);
                 break;
             case MRH_EVENT_USER_ACCESS_INFO_RESIDENCE_U:
+                u32_ResponseType = MRH_EVENT_USER_ACCESS_INFO_RESIDENCE_S;
                 p_Content->AllowAccess(Content::INFO_RESIDENCE);
-                break;
-                
-            default:
-                throw Exception("Wrong content access type event " +
-                                std::to_string(u32_Type) +
-                                " to create access for!");
-        }
-        
-        b_Result = true;
-    }
-    catch (std::exception& e)
-    {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::WARNING, e.what(),
-                                       "CBAccessContent.cpp", __LINE__);
-        b_Result = false;
-    }
-    
-    return b_Result;
-}
-
-void CBAccessContent::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept
-{
-    MRH_Uint32 u32_Type = p_Event->GetType();
-    
-    try
-    {
-        switch (u32_Type)
-        {
-            case MRH_EVENT_USER_ACCESS_DOCUMENTS_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_DOCUMENTS_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_PICTURES_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_PICTURES_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_MUSIC_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_MUSIC_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_VIDEOS_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_VIDEOS_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_DOWNLOADS_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_DOWNLOADS_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_CLIPBOARD_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_CLIPBOARD_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_INFO_PERSON_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_INFO_PERSON_S(CreateAccess(u32_Type)), u32_GroupID);
-                break;
-            case MRH_EVENT_USER_ACCESS_INFO_RESIDENCE_U:
-                MRH_EventStorage::Singleton().Add(MRH_U_ACCESS_INFO_RESIDENCE_S(CreateAccess(u32_Type)), u32_GroupID);
                 break;
             
             default:
-                throw Exception("Wrong content access type event" +
-                                std::to_string(u32_Type) +
-                                " to create response event for!");
+                throw Exception("Wrong content access type event " +
+                                std::to_string(p_Event->u32_Type) +
+                                " to create access for!");
         }
+        
+        c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
     }
     catch (MRH_PSBException& e)
     {
@@ -144,7 +106,30 @@ void CBAccessContent::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID
     }
     catch (std::exception& e)
     {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "General exception: " + std::string(e.what()),
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
                                        "CBAccessContent.cpp", __LINE__);
+    }
+    
+    // Access handled, send response
+    MRH_Event* p_Result = MRH_EVD_CreateSetEvent(u32_ResponseType, &c_Data);
+    
+    if (p_Result == NULL)
+    {
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to create response event!",
+                                       "CBAccessContent.cpp", __LINE__);
+        return;
+    }
+    
+    p_Result->u32_GroupID = u32_GroupID;
+    
+    try
+    {
+        MRH_EventStorage::Singleton().Add(p_Result);
+    }
+    catch (MRH_PSBException& e)
+    {
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
+                                       "CBAccessContent.cpp", __LINE__);
+        MRH_EVD_DestroyEvent(p_Result);
     }
 }

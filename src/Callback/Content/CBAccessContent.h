@@ -65,23 +65,9 @@ public:
      *  \param u32_GroupID The event group id for the user event.  
      */
     
-    void Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept override;
+    void Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept override;
     
 private:
-    
-    //*************************************************************************************
-    // Callback
-    //*************************************************************************************
-    
-    /**
-     *  Create content access.
-     *
-     *  \param u32_Type The content access event type.
-     *
-     *  \return The access service event.
-     */
-    
-    bool CreateAccess(MRH_Uint32 u32_Type) noexcept;
     
     //*************************************************************************************
     // Data

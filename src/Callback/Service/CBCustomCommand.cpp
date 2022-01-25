@@ -42,16 +42,30 @@ CBCustomCommand::~CBCustomCommand() noexcept
 // Callback
 //*************************************************************************************
 
-void CBCustomCommand::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept
+void CBCustomCommand::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
+    MRH_EvD_Sys_NotImplemented_S c_Data;
+    c_Data.u32_Type = p_Event->u32_Type;
+    
+    MRH_Event* p_Result = MRH_EVD_CreateSetEvent(MRH_EVENT_NOT_IMPLEMENTED_S, &c_Data);
+    
+    if (p_Result == NULL)
+    {
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to create response event!",
+                                       "CBCustomCommand.cpp", __LINE__);
+        return;
+    }
+    
+    p_Result->u32_GroupID = u32_GroupID;
+    
     try
     {
-        MRH_SYS_NOT_IMPLEMENTED_S c_Result(p_Event->GetType());
-        MRH_EventStorage::Singleton().Add(c_Result, u32_GroupID);
+        MRH_EventStorage::Singleton().Add(p_Result);
     }
     catch (MRH_PSBException& e)
     {
         MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
                                        "CBCustomCommand.cpp", __LINE__);
+        MRH_EVD_DestroyEvent(p_Result);
     }
 }

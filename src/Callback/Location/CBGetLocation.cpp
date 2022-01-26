@@ -236,15 +236,18 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 
             default:
             {
-                c_Logger.Log(MRH_PSBLogger::INFO, "Connection lost, reconnecting...",
-                             "CBGetLocation.cpp", __LINE__);
+                if (MRH_SRV_IsConnected(p_Server) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::INFO, "Connection lost, reconnecting...",
+                                 "CBGetLocation.cpp", __LINE__);
                 
-                e_State = CONNECT_CONNECTION;
+                    e_State = CONNECT_CONNECTION;
+                }
                 break;
             }
         }
         
-        // State update
+        // State update for client connection
         switch (e_State)
         {
             /**
@@ -447,7 +450,7 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
         }
     }
     
-    // All done, clean up
+    // Clean up
     MRH_SRV_DestroyServer(p_Context, p_Server);
     MRH_SRV_Destroy(p_Context);
 }

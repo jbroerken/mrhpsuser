@@ -187,6 +187,7 @@ private:
     int i_ComServerPort;
     
     MRH_Uint32 u32_TimeoutS;
+    MRH_Uint32 u32_ConnectionRetryS;
     MRH_Uint32 u32_ClientUpdateS;
 
     // Location

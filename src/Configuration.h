@@ -208,6 +208,14 @@ public:
     MRH_Uint32 GetServerTimeoutS() const noexcept;
     
     /**
+     *  Get the server connection retry wait time in seconds.
+     *
+     *  \return The server connection retry wait time in seconds.
+     */
+    
+    MRH_Uint32 GetServerRetryWaitS() const noexcept;
+    
+    /**
      *  Get the client update timer in seconds.
      *
      *  \return The client update timer in seconds.
@@ -247,6 +255,7 @@ private:
     int i_ServerConnectionPort;
     std::string s_ServerCommunicationChannel;
     MRH_Uint32 u32_ServerTimeoutS;
+    MRH_Uint32 u32_ServerRetryWaitS;
     MRH_Uint32 u32_ServerClientUpdateS;
     
 protected:

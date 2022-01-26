@@ -27,11 +27,6 @@
 // Project
 #include "./CBGetLocation.h"
 
-// Pre-defined
-#ifndef SERVER_CONNECTION_WAIT_MULTIPLIER
-    #define SERVER_CONNECTION_WAIT_MULTIPLIER 10
-#endif
-
 
 //*************************************************************************************
 // Constructor / Destructor
@@ -81,6 +76,7 @@ CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : e_
     i_ComServerPort = -1;
     
     u32_TimeoutS = c_Configuration.GetServerTimeoutS();
+    u32_ConnectionRetryS = c_Configuration.GetServerRetryWaitS();
     u32_ClientUpdateS = c_Configuration.GetServerClientUpdateS();
     
     // Got connection info, now start updating client
@@ -284,12 +280,14 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                                            p_Server,
                                            p_Instance->p_ConServerAddress,
                                            p_Instance->i_ConServerPort,
-                                           p_Instance->u32_TimeoutS * SERVER_CONNECTION_WAIT_MULTIPLIER);
+                                           p_Instance->u32_TimeoutS);
                 
                 if (i_Result < 0)
                 {
                     c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to connect to connection server!",
                                  "CBGetLocation.cpp", __LINE__);
+                    
+                    std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ConnectionRetryS));
                 }
                 
                 e_State = NextState(e_State, (i_Result < 0));
@@ -306,12 +304,14 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                                            p_Server,
                                            p_Instance->p_ComServerAddress,
                                            p_Instance->i_ComServerPort,
-                                           p_Instance->u32_TimeoutS * SERVER_CONNECTION_WAIT_MULTIPLIER);
+                                           p_Instance->u32_TimeoutS);
                 
                 if (i_Result < 0)
                 {
                     c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to connect to comunication server!",
                                  "CBGetLocation.cpp", __LINE__);
+                    
+                    std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ConnectionRetryS));
                 }
                 
                 e_State = NextState(e_State, (i_Result < 0));
@@ -500,6 +500,11 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                                  "CBGetLocation.cpp", __LINE__);
                     i_Result = -1; // Set error
                 }
+                else
+                {
+                    memcpy(p_Instance->p_ComServerAddress, c_Response.p_Address, MRH_SRV_SIZE_SERVER_ADDRESS);
+                    p_Instance->i_ComServerPort = c_Response.u32_Port;
+                }
                 
                 e_State = NextState(e_State, (i_Result < 0));
                 break;
@@ -632,7 +637,7 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 e_Recieved = RecieveServerMessage(p_Server,
                                                   { MRH_SRV_C_MSG_LOCATION },
                                                   p_MessageBuffer,
-                                                  NULL);
+                                                  p_Instance->p_DevicePassword);
                 
                 if (e_Recieved == MRH_SRV_C_MSG_LOCATION)
                 {
@@ -717,7 +722,7 @@ CBGetLocation::ConnectionState CBGetLocation::NextState(ConnectionState e_State,
         case AUTH_RECIEVE_RESULT_CONNECTION:
             return b_Failed ? CONNECT_CONNECTION : CHANNEL_SEND_REQUEST;
         case AUTH_RECIEVE_RESULT_COMMUNICATION:
-            return b_Failed ? CONNECT_CONNECTION : CONNECT_COMMUNICATION;
+            return b_Failed ? CONNECT_CONNECTION : CLIENT_RECIEVE_REQUEST;
             
         // Channel
         case CHANNEL_SEND_REQUEST:

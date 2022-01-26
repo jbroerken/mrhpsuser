@@ -69,6 +69,7 @@ namespace
         SERVER_CONNECTION_PORT,
         SERVER_COMMUNICATION_CHANNEL,
         SERVER_TIMEOUT_S,
+        SERVER_RETRY_WAIT_S,
         SERVER_CLIENT_UPDATE_S,
         
         // Bounds
@@ -111,6 +112,7 @@ namespace
         "ConnectionPort",
         "CommunicationChannel",
         "TimeoutS",
+        "RetryWaitS",
         "ClientUpdateS"
     };
 }
@@ -139,6 +141,7 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                                  i_ServerConnectionPort(16096),
                                  s_ServerCommunicationChannel("de.mrh.speech"),
                                  u32_ServerTimeoutS(60),
+                                 u32_ServerRetryWaitS(300),
                                  u32_ServerClientUpdateS(300)
 {
     try
@@ -194,6 +197,7 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                 i_ServerConnectionPort = std::stoi(Block.GetValue(p_Identifier[SERVER_CONNECTION_PORT]));
                 s_ServerCommunicationChannel = Block.GetValue(p_Identifier[SERVER_COMMUNICATION_CHANNEL]);
                 u32_ServerTimeoutS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_TIMEOUT_S])));
+                u32_ServerRetryWaitS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_RETRY_WAIT_S])));
                 u32_ServerClientUpdateS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_CLIENT_UPDATE_S])));
             }
         }
@@ -306,7 +310,13 @@ MRH_Uint32 Configuration::GetServerTimeoutS() const noexcept
     return u32_ServerTimeoutS;
 }
 
+MRH_Uint32 Configuration::GetServerRetryWaitS() const noexcept
+{
+    return u32_ServerRetryWaitS;
+}
+
 MRH_Uint32 Configuration::GetServerClientUpdateS() const noexcept
 {
     return u32_ServerClientUpdateS;
 }
+

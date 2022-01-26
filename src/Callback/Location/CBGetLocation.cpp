@@ -449,6 +449,11 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                                  "CBGetLocation.cpp", __LINE__);
                     i_Result = -1; // Set error
                 }
+                else if (e_State == AUTH_RECIEVE_RESULT_COMMUNICATION)
+                {
+                    c_Logger.Log(MRH_PSBLogger::INFO, "Connected, waiting for app client!",
+                                 "Server.cpp", __LINE__);
+                }
                 
                 e_State = NextState(e_State, (i_Result < 0));
                 break;
@@ -622,6 +627,11 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                                                        std::string(MRH_ERR_GetServerErrorString()),
                                  "CBGetLocation.cpp", __LINE__);
                 }
+                else if (u8_PairResult == 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::INFO, "App client paired!",
+                                 "Server.cpp", __LINE__);
+                }
                 
                 e_State = NextState(e_State, (i_Result < 0));
                 break;
@@ -667,6 +677,9 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 }
                 else if (e_Recieved == MRH_SRV_S_MSG_PARTNER_CLOSED)
                 {
+                    c_Logger.Log(MRH_PSBLogger::INFO, "App client disconnected!",
+                                 "Server.cpp", __LINE__);
+                    
                     e_State = CLIENT_RECIEVE_REQUEST;
                 }
                 

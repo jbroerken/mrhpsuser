@@ -1,5 +1,5 @@
 /**
- *  CBReset.cpp
+ *  CBGetLocationO.cpp
  *
  *  This file is part of the MRH project.
  *  See the AUTHORS file for Copyright information.
@@ -25,54 +25,60 @@
 #include <libmrhpsb/MRH_PSBLogger.h>
 
 // Project
-#include "./CBReset.h"
+#include "./CBGetLocationO.h"
 
 
 //*************************************************************************************
 // Constructor / Destructor
 //*************************************************************************************
 
-CBReset::CBReset(std::shared_ptr<Content>& p_Content) noexcept : p_Content(p_Content)
+#if MRH_USER_LOCATION_USE_SERVER > 0
+CBGetLocationO::CBGetLocationO() : c_Server()
+#else
+CBGetLocationO::CBGetLocationO()
+#endif
 {}
 
-CBReset::~CBReset() noexcept
+CBGetLocationO::~CBGetLocationO() noexcept
 {}
 
 //*************************************************************************************
 // Callback
 //*************************************************************************************
 
-void CBReset::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
+void CBGetLocationO::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
-    // Get package path
-    MRH_EvD_Sys_ResetRequest_U c_Data;
+    MRH_EvD_U_GetLocation_S c_Data;
     
-    if (MRH_EVD_ReadEvent(&c_Data, MRH_EVENT_PS_RESET_REQUEST_U, p_Event) < 0)
+#if MRH_USER_LOCATION_USE_SERVER > 0
+    c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
+    
+    c_Server.GetLocation(c_Data.f64_Latitude,
+                         c_Data.f64_Longtitude,
+                         c_Data.f64_Elevation,
+                         c_Data.f64_Facing);
+#else
+    c_Data.u8_Result = MRH_EVD_BASE_RESULT_FAILED;
+#endif
+    
+    MRH_Event* p_Result = MRH_EVD_CreateSetEvent(MRH_EVENT_USER_GET_LOCATION_S, &c_Data);
+    
+    if (p_Result == NULL)
     {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to read event data!",
-                                       "CBReset.cpp", __LINE__);
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to create response event!",
+                                       "CBGetLocation.cpp", __LINE__);
         return;
     }
     
-    // Reset in individual try-catch blocks so both will be performed
+    p_Result->u32_GroupID = u32_GroupID;
+    
     try
     {
-        try
-        {
-            p_Content->Reset(c_Data.p_PackagePath);
-        }
-        catch (...)
-        {
-            MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Content reset failed!",
-                                           "CBSReset.cpp", __LINE__);
-            
-            // Invalid path, which will fail but remove links
-            p_Content->Reset("");
-        }
+        MRH_EventStorage::Singleton().Add(p_Result);
     }
-    catch (std::exception& e)
+    catch (MRH_PSBException& e)
     {
         MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
-                                       "CBReset.cpp", __LINE__);
+                                       "CBGetLocation.cpp", __LINE__);
     }
 }

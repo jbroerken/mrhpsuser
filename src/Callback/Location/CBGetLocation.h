@@ -22,6 +22,8 @@
 #ifndef CBGetLocation_h
 #define CBGetLocation_h
 
+#define MRH_USER_LOCATION_USE_SERVER 1
+
 // C / C++
 #if MRH_USER_LOCATION_USE_SERVER > 0
 #include <thread>

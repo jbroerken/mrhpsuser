@@ -635,7 +635,8 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
             case LOCATION_RECIEVE_CURRENT_LOCATION:
             {
                 e_Recieved = RecieveServerMessage(p_Server,
-                                                  { MRH_SRV_C_MSG_LOCATION },
+                                                  { MRH_SRV_S_MSG_PARTNER_CLOSED,
+                                                    MRH_SRV_C_MSG_LOCATION },
                                                   p_MessageBuffer,
                                                   p_Instance->p_DevicePassword);
                 

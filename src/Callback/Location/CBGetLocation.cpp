@@ -659,6 +659,10 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                         }
                     }
                 }
+                else if (e_Recieved == MRH_SRV_S_MSG_PARTNER_CLOSED)
+                {
+                    e_State = CLIENT_RECIEVE_REQUEST;
+                }
                 
                 std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ClientUpdateS));
                 break;

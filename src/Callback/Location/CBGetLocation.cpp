@@ -685,6 +685,8 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
     }
     
     // Clean up
+    e_State = CONNECTION_STATE_COUNT;
+    
     MRH_SRV_DestroyServer(p_Context, p_Server);
     MRH_SRV_Destroy(p_Context);
 }

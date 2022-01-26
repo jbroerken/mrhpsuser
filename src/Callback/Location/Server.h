@@ -61,13 +61,13 @@ public:
     /**
      *  Get the current user location.
      *
-     *  \param f64_Latitude The latitude result.
-     *  \param f64_Longtitude The longtitude result.
-     *  \param f64_Elevation The elevation result.
-     *  \param f64_Facing The facing result.
+     *  \param f32_Latitude The latitude result.
+     *  \param f32_Longtitude The longtitude result.
+     *  \param f32_Elevation The elevation result.
+     *  \param f32_Facing The facing result.
      */
     
-    void GetLocation(MRH_Sfloat64& f64_Latitude, MRH_Sfloat64& f64_Longtitude, MRH_Sfloat64& f64_Elevation, MRH_Sfloat64& f64_Facing) noexcept;
+    void GetLocation(MRH_Sfloat32& f32_Latitude, MRH_Sfloat32& f32_Longtitude, MRH_Sfloat32& f32_Elevation, MRH_Sfloat32& f32_Facing);
     
 private:
     
@@ -139,10 +139,10 @@ private:
     
     // Location
     std::mutex c_LocationMutex;
-    MRH_Sfloat64 f64_Latitude;
-    MRH_Sfloat64 f64_Longtitude;
-    MRH_Sfloat64 f64_Elevation;
-    MRH_Sfloat64 f64_Facing;
+    MRH_Sfloat32 f32_Latitude;
+    MRH_Sfloat32 f32_Longtitude;
+    MRH_Sfloat32 f32_Elevation;
+    MRH_Sfloat32 f32_Facing;
     
 protected:
 

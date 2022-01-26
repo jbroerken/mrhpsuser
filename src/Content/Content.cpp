@@ -32,11 +32,35 @@
 
 // Project
 #include "./Content.h"
-#include "../Configuration.h"
+#include "./ContentPaths.h"
 
 // Pre-defined
 namespace
 {
+    const char* p_SourcePaths[Content::TYPE_COUNT] =
+    {
+        MRH_USER_DOCUMENTS_SOURCE_PATH,
+        MRH_USER_PICTURES_SOURCE_PATH,
+        MRH_USER_MUSIC_SOURCE_PATH,
+        MRH_USER_VIDEOS_SOURCE_PATH,
+        MRH_USER_DOWNLOADS_SOURCE_PATH,
+        MRH_USER_CLIPBOARD_SOURCE_PATH,
+        MRH_USER_INFO_PERSON_SOURCE_PATH,
+        MRH_USER_INFO_RESIDENCE_SOURCE_PATH
+    };
+
+    const char* p_LinkPaths[Content::TYPE_COUNT] =
+    {
+        MRH_USER_DOCUMENTS_LINK_PATH,
+        MRH_USER_PICTURES_LINK_PATH,
+        MRH_USER_MUSIC_LINK_PATH,
+        MRH_USER_VIDEOS_LINK_PATH,
+        MRH_USER_DOWNLOADS_LINK_PATH,
+        MRH_USER_CLIPBOARD_LINK_PATH,
+        MRH_USER_INFO_PERSON_LINK_PATH,
+        MRH_USER_INFO_RESIDENCE_LINK_PATH
+    };
+
 #ifdef __APPLE__
     constexpr int i_PackageDirMode = 0666;
 #else
@@ -52,44 +76,32 @@ namespace
 Content::Content() : b_Reset(false),
                      s_UserDirLinkPath("")
 {
-    Configuration& c_Config = Configuration::Singleton();
-    
-    std::string s_SourceDir(c_Config.GetSourceDirectoryPath());
-    std::string s_ContentLinkDir(c_Config.GetContentLinkDirectoryPath());
-    std::string s_Documents(c_Config.GetDocumentsDirectory());
-    std::string s_Pictures(c_Config.GetPicturesDirectory());
-    std::string s_Music(c_Config.GetMusicDirectory());
-    std::string s_Videos(c_Config.GetVideosDirectory());
-    std::string s_Downloads(c_Config.GetDownloadsDirectory());
-    std::string s_Clipboard(c_Config.GetClipboardFile());
-    std::string s_InfoPerson(c_Config.GetInfoPersonFile());
-    std::string s_InfoResidence(c_Config.GetInfoResidenceFile());
-    
     try
     {
         // Make sure the user directory exists
-        CheckDir(s_SourceDir);
-        CheckDir(s_ContentLinkDir);
+        CheckDir(MRH_PACKAGE_USER_DIRECTORY_SOURCE);
         
-        // Make sure stuff exists
-        CheckDir(s_SourceDir + s_Documents);
-        CheckDir(s_SourceDir + s_Pictures);
-        CheckDir(s_SourceDir + s_Music);
-        CheckDir(s_SourceDir + s_Videos);
-        CheckDir(s_SourceDir + s_Downloads);
-        CheckFile(s_SourceDir + s_Clipboard);
-        CheckFile(s_SourceDir + s_InfoPerson);
-        CheckFile(s_SourceDir + s_InfoResidence);
-        
-        // All OK, create
-        m_SymLink.emplace(DOCUMENTS, new SymLink(s_SourceDir + s_Documents, s_ContentLinkDir + s_Documents));
-        m_SymLink.emplace(PICTURES, new SymLink(s_SourceDir + s_Pictures, s_ContentLinkDir + s_Pictures));
-        m_SymLink.emplace(MUSIC, new SymLink(s_SourceDir + s_Music, s_ContentLinkDir + s_Music));
-        m_SymLink.emplace(VIDEOS, new SymLink(s_SourceDir + s_Videos, s_ContentLinkDir + s_Videos));
-        m_SymLink.emplace(DOWNLOADS, new SymLink(s_SourceDir + s_Downloads, s_ContentLinkDir + s_Downloads));
-        m_SymLink.emplace(CLIPBOARD, new SymLink(s_SourceDir + s_Clipboard, s_ContentLinkDir + s_Clipboard));
-        m_SymLink.emplace(INFO_PERSON, new SymLink(s_SourceDir + s_InfoPerson, s_ContentLinkDir + s_InfoPerson));
-        m_SymLink.emplace(INFO_RESIDENCE, new SymLink(s_SourceDir + s_InfoResidence, s_ContentLinkDir + s_InfoResidence));
+        // Make sure stuff exists, then create the link info
+        for (size_t i = 0; i < TYPE_COUNT; ++i)
+        {
+            switch (i)
+            {
+                // Files
+                case CLIPBOARD:
+                case INFO_PERSON:
+                case INFO_RESIDENCE:
+                    CheckFile(p_SourcePaths[i]);
+                    break;
+                    
+                // Folders
+                default:
+                    CheckDir(p_SourcePaths[i]);
+                    break;
+            }
+            
+            m_SymLink.emplace(i, new SymLink(p_SourcePaths[i],
+                                             p_LinkPaths[i]));
+        }
     }
     catch (Exception& e)
     {
@@ -219,16 +231,14 @@ std::string Content::GetFullPackageLinkPath(std::string s_PackagePath)
         s_PackagePath += "/";
     }
     
-    std::string s_DestinationDirPath = Configuration::Singleton().GetPackageLinkDirectoryPath();
-    
-    // @NOTE: Using std::string operations here didn't work while not returning ANY errors.
-    //        This convoluted way of doing the string works though.
-    size_t us_StringLength = s_PackagePath.length() + s_DestinationDirPath.length() + 1;
+    // NOTE: Using std::string operations here didn't work while not returning ANY errors.
+    //       This convoluted way of doing the string works though.
+    size_t us_StringLength = s_PackagePath.length() + std::strlen(MRH_PACKAGE_USER_DIRECTORY_LINK) + 1;
     char p_CharString[us_StringLength];
     
     std::memset(p_CharString, '\0', us_StringLength);
     std::strcpy(p_CharString, s_PackagePath.c_str());
-    std::strcat(p_CharString, s_DestinationDirPath.c_str());
+    std::strcat(p_CharString, MRH_PACKAGE_USER_DIRECTORY_LINK);
     
     return std::string(p_CharString);
 }
@@ -272,9 +282,7 @@ void Content::Reset(std::string const& s_PackagePath)
         // Removal of main user dir link
         if (unlink(s_UserDirLinkPath.c_str()) < 0 && errno != ENOENT)
         {
-            throw Exception("Failed to unlink content directory link (" +
-                            s_UserDirLinkPath +
-                            "): " +
+            throw Exception("Failed to unlink \"_User\" directory link: " +
                             std::string(std::strerror(errno)) +
                             " (" +
                             std::to_string(errno) +
@@ -295,27 +303,18 @@ void Content::Reset(std::string const& s_PackagePath)
         throw Exception(e.what());
     }
     
-    std::string s_ContentLinkDirPath = Configuration::Singleton().GetContentLinkDirectoryPath();
-    
-    if (symlink(s_ContentLinkDirPath.c_str(), s_UserDirLinkPath.c_str()) < 0)
+    if (symlink(MRH_PACKAGE_USER_DIRECTORY_SOURCE, s_UserDirLinkPath.c_str()) < 0)
     {
         // Already a symlink in place with this name
         if (errno == EEXIST && IsSymLink(s_UserDirLinkPath) == true)
         {
             // Re-link, maybe something wasn't removed correctly (crash)
-            MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::INFO, s_ContentLinkDirPath +
-                                                                " directory link to " +
-                                                                s_UserDirLinkPath +
-                                                                " already exists.",
+            MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::WARNING, "\"_User\" directory link already exists.",
                                            "Content.cpp", __LINE__);
             
-            if (unlink(s_UserDirLinkPath.c_str()) < 0 || symlink(s_ContentLinkDirPath.c_str(), s_UserDirLinkPath.c_str()) < 0)
+            if (unlink(s_UserDirLinkPath.c_str()) < 0 || symlink(MRH_PACKAGE_USER_DIRECTORY_SOURCE, s_UserDirLinkPath.c_str()) < 0)
             {
-                throw Exception("Failed to recreate content directory link from " +
-                                s_ContentLinkDirPath +
-                                " to " +
-                                s_UserDirLinkPath +
-                                ": " +
+                throw Exception("Failed to recreate \"_User\" directory link: " +
                                 std::string(std::strerror(errno)) +
                                 " (" +
                                 std::to_string(errno) +
@@ -324,11 +323,7 @@ void Content::Reset(std::string const& s_PackagePath)
         }
         else
         {
-            throw Exception("Failed to create content directory link from " +
-                            s_ContentLinkDirPath +
-                            " to " +
-                            s_UserDirLinkPath +
-                            ": " +
+            throw Exception("Failed to create \"_User\" directory link: " +
                             std::string(std::strerror(errno)) +
                             " (" +
                             std::to_string(errno) +

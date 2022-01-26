@@ -46,35 +46,30 @@ CBGetLocation::~CBGetLocation() noexcept
 // Callback
 //*************************************************************************************
 
-void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcept
+void CBGetLocation::Callback(const MRH_EVBase* p_Event, MRH_Uint32 u32_GroupID) noexcept
 {
-    MRH_EvD_U_GetLocation_S c_Data;
-    
-#if MRH_USER_LOCATION_USE_SERVER > 0
-    c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
-    
-    c_Server.GetLocation(c_Data.f64_Latitude,
-                         c_Data.f64_Longtitude,
-                         c_Data.f64_Elevation,
-                         c_Data.f64_Facing);
-#else
-    c_Data.u8_Result = MRH_EVD_BASE_RESULT_FAILED;
-#endif
-    
-    MRH_Event* p_Result = MRH_EVD_CreateSetEvent(MRH_EVENT_USER_GET_LOCATION_S, &c_Data);
-    
-    if (p_Result == NULL)
-    {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to create response event!",
-                                       "CBGetLocation.cpp", __LINE__);
-        return;
-    }
-    
-    p_Result->u32_GroupID = u32_GroupID;
-    
     try
     {
-        MRH_EventStorage::Singleton().Add(p_Result);
+#if MRH_USER_LOCATION_USE_SERVER > 0
+        MRH_Sfloat32 f32_Latitude;
+        MRH_Sfloat32 f32_Longtitude;
+        MRH_Sfloat32 f32_Elevation;
+        MRH_Sfloat32 f32_Facing;
+        
+        c_Server.GetLocation(f32_Latitude,
+                             f32_Longtitude,
+                             f32_Elevation,
+                             f32_Facing);
+        
+        MRH_EventStorage::Singleton().Add(MRH_U_GET_LOCATION_S(true,
+                                                               f32_Latitude,
+                                                               f32_Longtitude,
+                                                               f32_Elevation,
+                                                               f32_Facing),
+                                          u32_GroupID);
+#else
+        MRH_EventStorage::Singleton().Add(MRH_U_GET_LOCATION_S(false), u32_GroupID);
+#endif
     }
     catch (MRH_PSBException& e)
     {

@@ -74,94 +74,6 @@ public:
     //*************************************************************************************
     
     /**
-     *  Get the source directory path.
-     *
-     *  \return The source directory path.
-     */
-    
-    std::string GetSourceDirectoryPath() noexcept;
-    
-    /**
-     *  Get the content link directory path.
-     *
-     *  \return The content link directory path.
-     */
-    
-    std::string GetContentLinkDirectoryPath() noexcept;
-    
-    /**
-     *  Get the package link directory path.
-     *
-     *  \return The package link directory path.
-     */
-    
-    std::string GetPackageLinkDirectoryPath() noexcept;
-    
-    /**
-     *  Get the documents directory name.
-     *
-     *  \return The documents directory name.
-     */
-    
-    std::string GetDocumentsDirectory() noexcept;
-    
-    /**
-     *  Get the pictures directory name.
-     *
-     *  \return The pictures directory name.
-     */
-    
-    std::string GetPicturesDirectory() noexcept;
-    
-    /**
-     *  Get the music directory name.
-     *
-     *  \return The music directory name.
-     */
-    
-    std::string GetMusicDirectory() noexcept;
-    
-    /**
-     *  Get the videos directory name.
-     *
-     *  \return The videos directory name.
-     */
-    
-    std::string GetVideosDirectory() noexcept;
-    
-    /**
-     *  Get the downloads directory name.
-     *
-     *  \return The downloads directory name.
-     */
-    
-    std::string GetDownloadsDirectory() noexcept;
-    
-    /**
-     *  Get the clipboard file name.
-     *
-     *  \return The clipboard file name.
-     */
-    
-    std::string GetClipboardFile() noexcept;
-    
-    /**
-     *  Get the person info file name.
-     *
-     *  \return The person info file name.
-     */
-    
-    std::string GetInfoPersonFile() noexcept;
-    
-    /**
-     *  Get the residence info file name.
-     *
-     *  \return The residence info name.
-     */
-    
-    std::string GetInfoResidenceFile() noexcept;
-    
-    /**
      *  Get the server account mail.
      *
      *  \return The server account mail.
@@ -247,23 +159,6 @@ private:
     // Data
     //**************************************************************************************
 
-    // Source Paths
-    std::string s_SourceDirPath;
-    
-    // Link Paths
-    std::string s_ContentLinkDirPath;
-    std::string s_PackageLinkDirPath;
-    
-    // User Content
-    std::string s_DocumentsDir;
-    std::string s_PicturesDir;
-    std::string s_MusicDir;
-    std::string s_VideosDir;
-    std::string s_DownloadsDir;
-    std::string s_ClipboardFile;
-    std::string s_InfoPersonFile;
-    std::string s_InfoResidenceFile;
-    
     // Server
     std::string s_ServerAccountMail;
     std::string s_ServerAccountPassword;

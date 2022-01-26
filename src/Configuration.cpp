@@ -38,36 +38,16 @@ namespace
     enum Identifier
     {
         // Block Name
-        BLOCK_SOURCE = 0,
-        BLOCK_DESTINATION = 1,
-        BLOCK_USER_CONTENT = 2,
-        BLOCK_SERVER = 3,
-        
-        // Source Key
-        SOURCE_DIR_PATH = 4,
-        
-        // Link Key
-        LINK_CONTENT_DIR_PATH = 5,
-        LINK_PACKAGE_DIR_PATH = 6,
-        
-        // User Content Key
-        USER_CONTENT_DOCUMENTS = 7,
-        USER_CONTENT_PICTURES,
-        USER_CONTENT_MUSIC,
-        USER_CONTENT_VIDEOS,
-        USER_CONTENT_DOWNLOADS,
-        USER_CONTENT_CLIPBOARD,
-        USER_CONTENT_INFO_PERSON,
-        USER_CONTENT_INFO_RESIDENCE,
+        BLOCK_SERVER = 0,
         
         // Server Key
-        SERVER_ACCOUNT_MAIL,
-        SERVER_ACCOUNT_PASSWORD,
-        SERVER_DEVICE_KEY,
-        SERVER_DEVICE_PASSWORD,
-        SERVER_CONNECTION_ADDRESS,
-        SERVER_CONNECTION_PORT,
-        SERVER_COMMUNICATION_CHANNEL,
+        SERVER_ACCOUNT_MAIL = 1,
+        SERVER_ACCOUNT_PASSWORD = 2,
+        SERVER_DEVICE_KEY = 3,
+        SERVER_DEVICE_PASSWORD = 4,
+        SERVER_CONNECTION_ADDRESS = 5,
+        SERVER_CONNECTION_PORT = 6,
+        SERVER_COMMUNICATION_CHANNEL = 7,
         SERVER_TIMEOUT_S,
         
         // Bounds
@@ -79,27 +59,7 @@ namespace
     const char* p_Identifier[IDENTIFIER_COUNT] =
     {
         // Block Name
-        "UserSource",
-        "UserDestination",
-        "UserContent",
         "Server",
-        
-        // Source Key
-        "SourceDirPath",
-        
-        // Link Key
-        "ContentLinkDirPath",
-        "PackageLinkDirPath",
-        
-        // User Content Key
-        "DocumentsDir",
-        "PicturesDir",
-        "MusicDir",
-        "VideosDir",
-        "DownloadsDir",
-        "ClipboardFile",
-        "InfoPersonFile",
-        "InfoResidenceFile",
         
         // Server Key
         "AccountMail",
@@ -118,18 +78,7 @@ namespace
 // Constructor / Destructor
 //*************************************************************************************
 
-Configuration::Configuration() noexcept : s_SourceDirPath("/var/mrh/mrhpsuser/"),
-                                          s_ContentLinkDirPath("/var/mrh/mrhpsuser/_User/"),
-                                          s_PackageLinkDirPath("FSRoot/_User/"),
-                                          s_DocumentsDir("Documents"),
-                                          s_PicturesDir("Pictures"),
-                                          s_MusicDir("Music"),
-                                          s_VideosDir("Videos"),
-                                          s_DownloadsDir("Downloads"),
-                                          s_ClipboardFile("Clipboard.txt"),
-                                          s_InfoPersonFile("UserPerson.conf"),
-                                          s_InfoResidenceFile("UserResidence.conf"),
-                                          s_ServerAccountMail(""),
+Configuration::Configuration() noexcept : s_ServerAccountMail(""),
                                           s_ServerAccountPassword(""),
                                           s_ServerDeviceKey(""),
                                           s_ServerDevicePassword(""),
@@ -173,43 +122,7 @@ void Configuration::Load()
         
         for (auto& Block : c_File.l_Block)
         {
-            if (Block.GetName().compare(p_Identifier[BLOCK_SOURCE]) == 0)
-            {
-                s_SourceDirPath = Block.GetValue(p_Identifier[SOURCE_DIR_PATH]);
-                
-                if (s_SourceDirPath.size() > 0 && *(--(s_SourceDirPath.end())) != '/')
-                {
-                    s_SourceDirPath += "/";
-                }
-            }
-            else if (Block.GetName().compare(p_Identifier[BLOCK_DESTINATION]) == 0)
-            {
-                s_ContentLinkDirPath = Block.GetValue(p_Identifier[LINK_CONTENT_DIR_PATH]);
-                
-                if (s_ContentLinkDirPath.size() > 0 && *(--(s_ContentLinkDirPath.end())) != '/')
-                {
-                    s_ContentLinkDirPath += "/";
-                }
-                
-                s_PackageLinkDirPath = Block.GetValue(p_Identifier[LINK_PACKAGE_DIR_PATH]);
-                
-                if (s_PackageLinkDirPath.size() > 0 && *(--(s_PackageLinkDirPath.end())) != '/')
-                {
-                    s_PackageLinkDirPath += "/";
-                }
-            }
-            else if (Block.GetName().compare(p_Identifier[BLOCK_USER_CONTENT]) == 0)
-            {
-                s_DocumentsDir = Block.GetValue(p_Identifier[USER_CONTENT_DOCUMENTS]);
-                s_PicturesDir = Block.GetValue(p_Identifier[USER_CONTENT_PICTURES]);
-                s_MusicDir = Block.GetValue(p_Identifier[USER_CONTENT_MUSIC]);
-                s_VideosDir = Block.GetValue(p_Identifier[USER_CONTENT_VIDEOS]);
-                s_DownloadsDir = Block.GetValue(p_Identifier[USER_CONTENT_DOWNLOADS]);
-                s_ClipboardFile = Block.GetValue(p_Identifier[USER_CONTENT_CLIPBOARD]);
-                s_InfoPersonFile = Block.GetValue(p_Identifier[USER_CONTENT_INFO_PERSON]);
-                s_InfoResidenceFile = Block.GetValue(p_Identifier[USER_CONTENT_INFO_RESIDENCE]);
-            }
-            else if (Block.GetName().compare(p_Identifier[BLOCK_SERVER]) == 0)
+            if (Block.GetName().compare(p_Identifier[BLOCK_SERVER]) == 0)
             {
                 s_ServerAccountMail = Block.GetValue(p_Identifier[SERVER_ACCOUNT_MAIL]);
                 s_ServerAccountPassword = Block.GetValue(p_Identifier[SERVER_ACCOUNT_PASSWORD]);
@@ -231,61 +144,6 @@ void Configuration::Load()
 //*************************************************************************************
 // Getters
 //*************************************************************************************
-
-std::string Configuration::GetSourceDirectoryPath() noexcept
-{
-    return s_SourceDirPath;
-}
-
-std::string Configuration::GetContentLinkDirectoryPath() noexcept
-{
-    return s_ContentLinkDirPath;
-}
-
-std::string Configuration::GetPackageLinkDirectoryPath() noexcept
-{
-    return s_PackageLinkDirPath;
-}
-
-std::string Configuration::GetDocumentsDirectory() noexcept
-{
-    return s_DocumentsDir;
-}
-
-std::string Configuration::GetPicturesDirectory() noexcept
-{
-    return s_PicturesDir;
-}
-
-std::string Configuration::GetMusicDirectory() noexcept
-{
-    return s_MusicDir;
-}
-
-std::string Configuration::GetVideosDirectory() noexcept
-{
-    return s_VideosDir;
-}
-
-std::string Configuration::GetDownloadsDirectory() noexcept
-{
-    return s_DownloadsDir;
-}
-
-std::string Configuration::GetClipboardFile() noexcept
-{
-    return s_ClipboardFile;
-}
-
-std::string Configuration::GetInfoPersonFile() noexcept
-{
-    return s_InfoPersonFile;
-}
-
-std::string Configuration::GetInfoResidenceFile() noexcept
-{
-    return s_InfoResidenceFile;
-}
 
 std::string Configuration::GetServerAccountMail() noexcept
 {

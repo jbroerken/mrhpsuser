@@ -79,12 +79,6 @@ set(SRC_LIST_CALLBACK "${SRC_DIR_PATH}/Callback/Service/CBAvail.cpp"
                       "${SRC_DIR_PATH}/Callback/Content/CBAccessClear.h"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.cpp"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.h")
-                      
-if(USE_SERVER MATCHES ON)
-    set(SRC_LIST_CALLBACK ${SRC_LIST_CALLBACK}
-                          "${SRC_DIR_PATH}/Callback/Location/Server.cpp"
-                          "${SRC_DIR_PATH}/Callback/Location/Server.h")
-endif()
    
 set(SRC_LIST_CONTENT "${SRC_DIR_PATH}/Content/Content.cpp"
                      "${SRC_DIR_PATH}/Content/Content.h")

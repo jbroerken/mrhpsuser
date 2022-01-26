@@ -32,7 +32,6 @@
 
 // Project
 #include "./Content.h"
-#include "../Configuration.h"
 
 // Pre-defined
 namespace
@@ -49,47 +48,47 @@ namespace
 // Constructor / Destructor
 //*************************************************************************************
 
-Content::Content() : b_Reset(false),
-                     s_UserDirLinkPath("")
+Content::Content(Configuration const& c_Configuration) : b_Reset(false),
+                                                         s_UserDirLinkPath("")
 {
-    Configuration& c_Config = Configuration::Singleton();
+    s_ContentLinkDirPath = c_Configuration.GetContentLinkDirectoryPath();
+    s_PackageLinkDirPath = c_Configuration.GetPackageLinkDirectoryPath();
     
-    std::string s_SourceDir(c_Config.GetSourceDirectoryPath());
-    std::string s_ContentLinkDir(c_Config.GetContentLinkDirectoryPath());
-    std::string s_Documents(c_Config.GetDocumentsDirectory());
-    std::string s_Pictures(c_Config.GetPicturesDirectory());
-    std::string s_Music(c_Config.GetMusicDirectory());
-    std::string s_Videos(c_Config.GetVideosDirectory());
-    std::string s_Downloads(c_Config.GetDownloadsDirectory());
-    std::string s_Clipboard(c_Config.GetClipboardFile());
-    std::string s_InfoPerson(c_Config.GetInfoPersonFile());
-    std::string s_InfoResidence(c_Config.GetInfoResidenceFile());
+    std::string s_SourceDirPath(c_Configuration.GetSourceDirectoryPath());
+    std::string s_Documents(c_Configuration.GetDocumentsDirectory());
+    std::string s_Pictures(c_Configuration.GetPicturesDirectory());
+    std::string s_Music(c_Configuration.GetMusicDirectory());
+    std::string s_Videos(c_Configuration.GetVideosDirectory());
+    std::string s_Downloads(c_Configuration.GetDownloadsDirectory());
+    std::string s_Clipboard(c_Configuration.GetClipboardFile());
+    std::string s_InfoPerson(c_Configuration.GetInfoPersonFile());
+    std::string s_InfoResidence(c_Configuration.GetInfoResidenceFile());
     
     try
     {
         // Make sure the user directory exists
-        CheckDir(s_SourceDir);
-        CheckDir(s_ContentLinkDir);
+        CheckDir(s_SourceDirPath);
+        CheckDir(s_ContentLinkDirPath);
         
         // Make sure stuff exists
-        CheckDir(s_SourceDir + s_Documents);
-        CheckDir(s_SourceDir + s_Pictures);
-        CheckDir(s_SourceDir + s_Music);
-        CheckDir(s_SourceDir + s_Videos);
-        CheckDir(s_SourceDir + s_Downloads);
-        CheckFile(s_SourceDir + s_Clipboard);
-        CheckFile(s_SourceDir + s_InfoPerson);
-        CheckFile(s_SourceDir + s_InfoResidence);
+        CheckDir(s_SourceDirPath + s_Documents);
+        CheckDir(s_SourceDirPath + s_Pictures);
+        CheckDir(s_SourceDirPath + s_Music);
+        CheckDir(s_SourceDirPath + s_Videos);
+        CheckDir(s_SourceDirPath + s_Downloads);
+        CheckFile(s_SourceDirPath + s_Clipboard);
+        CheckFile(s_SourceDirPath + s_InfoPerson);
+        CheckFile(s_SourceDirPath + s_InfoResidence);
         
         // All OK, create
-        m_SymLink.emplace(DOCUMENTS, new SymLink(s_SourceDir + s_Documents, s_ContentLinkDir + s_Documents));
-        m_SymLink.emplace(PICTURES, new SymLink(s_SourceDir + s_Pictures, s_ContentLinkDir + s_Pictures));
-        m_SymLink.emplace(MUSIC, new SymLink(s_SourceDir + s_Music, s_ContentLinkDir + s_Music));
-        m_SymLink.emplace(VIDEOS, new SymLink(s_SourceDir + s_Videos, s_ContentLinkDir + s_Videos));
-        m_SymLink.emplace(DOWNLOADS, new SymLink(s_SourceDir + s_Downloads, s_ContentLinkDir + s_Downloads));
-        m_SymLink.emplace(CLIPBOARD, new SymLink(s_SourceDir + s_Clipboard, s_ContentLinkDir + s_Clipboard));
-        m_SymLink.emplace(INFO_PERSON, new SymLink(s_SourceDir + s_InfoPerson, s_ContentLinkDir + s_InfoPerson));
-        m_SymLink.emplace(INFO_RESIDENCE, new SymLink(s_SourceDir + s_InfoResidence, s_ContentLinkDir + s_InfoResidence));
+        m_SymLink.emplace(DOCUMENTS, new SymLink(s_SourceDirPath + s_Documents, s_ContentLinkDirPath + s_Documents));
+        m_SymLink.emplace(PICTURES, new SymLink(s_SourceDirPath + s_Pictures, s_ContentLinkDirPath + s_Pictures));
+        m_SymLink.emplace(MUSIC, new SymLink(s_SourceDirPath + s_Music, s_ContentLinkDirPath + s_Music));
+        m_SymLink.emplace(VIDEOS, new SymLink(s_SourceDirPath + s_Videos, s_ContentLinkDirPath + s_Videos));
+        m_SymLink.emplace(DOWNLOADS, new SymLink(s_SourceDirPath + s_Downloads, s_ContentLinkDirPath + s_Downloads));
+        m_SymLink.emplace(CLIPBOARD, new SymLink(s_SourceDirPath + s_Clipboard, s_ContentLinkDirPath + s_Clipboard));
+        m_SymLink.emplace(INFO_PERSON, new SymLink(s_SourceDirPath + s_InfoPerson, s_ContentLinkDirPath + s_InfoPerson));
+        m_SymLink.emplace(INFO_RESIDENCE, new SymLink(s_SourceDirPath + s_InfoResidence, s_ContentLinkDirPath + s_InfoResidence));
     }
     catch (Exception& e)
     {
@@ -219,16 +218,14 @@ std::string Content::GetFullPackageLinkPath(std::string s_PackagePath)
         s_PackagePath += "/";
     }
     
-    std::string s_DestinationDirPath = Configuration::Singleton().GetPackageLinkDirectoryPath();
-    
     // @NOTE: Using std::string operations here didn't work while not returning ANY errors.
     //        This convoluted way of doing the string works though.
-    size_t us_StringLength = s_PackagePath.length() + s_DestinationDirPath.length() + 1;
+    size_t us_StringLength = s_PackagePath.length() + s_PackageLinkDirPath.length() + 1;
     char p_CharString[us_StringLength];
     
     std::memset(p_CharString, '\0', us_StringLength);
     std::strcpy(p_CharString, s_PackagePath.c_str());
-    std::strcat(p_CharString, s_DestinationDirPath.c_str());
+    std::strcat(p_CharString, s_PackageLinkDirPath.c_str());
     
     return std::string(p_CharString);
 }
@@ -294,8 +291,6 @@ void Content::Reset(std::string const& s_PackagePath)
     {
         throw Exception(e.what());
     }
-    
-    std::string s_ContentLinkDirPath = Configuration::Singleton().GetContentLinkDirectoryPath();
     
     if (symlink(s_ContentLinkDirPath.c_str(), s_UserDirLinkPath.c_str()) < 0)
     {

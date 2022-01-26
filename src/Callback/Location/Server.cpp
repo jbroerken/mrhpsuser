@@ -73,7 +73,7 @@ Server::Server() : b_Run(true),
                    b_AppPaired(false)
 {
     // Setup data
-    Configuration& c_Config = Configuration::Singleton();
+    Configuration c_Config;
     
     memset(p_AccountMail, '\0', MRH_SRV_SIZE_ACCOUNT_MAIL);
     strncpy(p_AccountMail,
@@ -140,7 +140,7 @@ void Server::Update(Server* p_Instance) noexcept
 {
     // Define used variables
     MRH_PSBLogger& c_Logger = MRH_PSBLogger::Singleton();
-    Configuration& c_Config = Configuration::Singleton();
+    Configuration c_Config;
     
     thread_local int i_State = CONNECTION_CONNECT; // Initially we connect to the connection server
     int i_NextState = -1;

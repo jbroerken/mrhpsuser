@@ -162,7 +162,7 @@ private:
      *  \return The first matching recieved message on success, MRH_SRV_CS_MSG_UNK on failure.
      */
     
-    static MRH_Srv_NetMessage RecieveServerMessage(MRH_Srv_Server* p_Server, std::vector<MRH_Srv_NetMessage> v_Message, uint8_t* p_Buffer, const char* p_Password) noexcept;
+    MRH_Srv_NetMessage RecieveServerMessage(MRH_Srv_Server* p_Server, std::vector<MRH_Srv_NetMessage> v_Message, uint8_t* p_Buffer, const char* p_Password) noexcept;
     
     //*************************************************************************************
     // Data

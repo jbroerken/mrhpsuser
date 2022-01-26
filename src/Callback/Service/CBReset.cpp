@@ -61,18 +61,18 @@ void CBReset::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) noexcep
         {
             p_Content->Reset(c_Data.p_PackagePath);
         }
-        catch (...)
+        catch (Exception& e)
         {
-            MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Content reset failed!",
+            MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
                                            "CBSReset.cpp", __LINE__);
             
             // Invalid path, which will fail but remove links
             p_Content->Reset("");
         }
     }
-    catch (std::exception& e)
+    catch (...)
     {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Content reset failed!",
                                        "CBReset.cpp", __LINE__);
     }
 }

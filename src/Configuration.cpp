@@ -165,11 +165,12 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                     s_ContentLinkDirPath += "/";
                 }
                 
+                // End of link dir path should be the directory
                 s_PackageLinkDirPath = Block.GetValue(p_Identifier[LINK_PACKAGE_DIR_PATH]);
                 
-                if (s_PackageLinkDirPath.size() > 0 && *(--(s_PackageLinkDirPath.end())) != '/')
+                if (s_PackageLinkDirPath.size() > 0 && *(--(s_PackageLinkDirPath.end())) == '/')
                 {
-                    s_PackageLinkDirPath += "/";
+                    s_PackageLinkDirPath.erase(--(s_PackageLinkDirPath.end()));
                 }
             }
             else if (Block.GetName().compare(p_Identifier[BLOCK_USER_CONTENT]) == 0)

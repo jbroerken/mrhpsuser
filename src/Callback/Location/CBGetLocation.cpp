@@ -87,10 +87,13 @@ CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : e_
     try
     {
         c_Thread = std::thread(ClientUpdate, this);
+        
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::INFO, "Started client update thread!",
+                                       "CBGetLocation.cpp", __LINE__);
     }
     catch (std::exception& e)
     {
-        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to start server thread: " +
+        MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, "Failed to start client update thread: " +
                                                              std::string(e.what()),
                                        "CBGetLocation.cpp", __LINE__);
     }
@@ -187,7 +190,7 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
     
     MRH_Srv_Context* p_Context = MRH_SRV_Init(MRH_SRV_CLIENT_PLATFORM,
                                               1, /* Connection server is replaced by communication server */
-                                              p_Instance->u32_TimeoutS);
+                                              p_Instance->u32_TimeoutS * 1000);
     
     if (p_Context == NULL)
     {
@@ -216,15 +219,31 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
     
     uint8_t p_MessageBuffer[MRH_SRV_SIZE_MESSAGE_BUFFER];
     MRH_Srv_NetMessage e_Recieved;
-    int i_Result;
+    int i_Result = -1;
     
     char p_Salt[MRH_SRV_SIZE_ACCOUNT_PASSWORD_SALT];
-    uint32_t u32_Nonce;
-    uint8_t u8_HashType;
+    uint32_t u32_Nonce = 0;
+    uint8_t u8_HashType = 0;
+    
+    uint8_t u8_PairResult = MRH_SRV_NET_MESSAGE_ERR_DA_PAIR;
     
     // Start updating the client
     while (p_Instance->b_RunThread == true)
     {
+        // Wait before update
+        switch (e_State)
+        {
+            case CONNECT_CONNECTION:
+            case CONNECT_COMMUNICATION:
+            case LOCATION_RECIEVE_FIRST_LOCATION:
+            case LOCATION_RECIEVE_CURRENT_LOCATION:
+                break;
+                
+            default:
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                break;
+        }
+        
         // Connection warning and reset
         switch (e_State)
         {
@@ -256,6 +275,9 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 
             case CONNECT_CONNECTION:
             {
+                c_Logger.Log(MRH_PSBLogger::INFO, "Connecting to connection server!",
+                             "CBGetLocation.cpp", __LINE__);
+                
                 MRH_SRV_Disconnect(p_Server, -1); // Reset server object
                 
                 i_Result = MRH_SRV_Connect(p_Context,
@@ -275,6 +297,9 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
             }
             case CONNECT_COMMUNICATION:
             {
+                c_Logger.Log(MRH_PSBLogger::INFO, "Connecting to communication server!",
+                             "CBGetLocation.cpp", __LINE__);
+                
                 MRH_SRV_Disconnect(p_Server, -1);
                 
                 i_Result = MRH_SRV_Connect(p_Context,
@@ -311,7 +336,7 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 
                 if (i_Result < 0)
                 {
-                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send auth request net message: " +
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send auth request message: " +
                                                        std::string(MRH_ERR_GetServerErrorString()),
                                  "CBGetLocation.cpp", __LINE__);
                 }
@@ -322,68 +347,110 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
             case AUTH_RECIEVE_CHALLENGE_CONNECTION:
             case AUTH_RECIEVE_CHALLENGE_COMMUNICATION:
             {
-                do
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_S_MSG_AUTH_RESULT,
+                                                    MRH_SRV_S_MSG_AUTH_CHALLENGE },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_S_MSG_AUTH_CHALLENGE)
                 {
-                    e_Recieved = RecieveServerMessage(p_Server,
-                                                      { MRH_SRV_S_MSG_AUTH_RESULT,
-                                                        MRH_SRV_S_MSG_AUTH_CHALLENGE },
-                                                      p_MessageBuffer,
-                                                      NULL);
+                    MRH_SRV_S_MSG_AUTH_CHALLENGE_DATA c_Challenge;
                     
-                    if (e_Recieved == MRH_SRV_S_MSG_AUTH_CHALLENGE)
+                    if (MRH_SRV_SetNetMessage(&c_Challenge, p_MessageBuffer) < 0)
                     {
-                        MRH_SRV_S_MSG_AUTH_CHALLENGE_DATA c_Challenge;
-                        
-                        if (MRH_SRV_SetNetMessage(&c_Challenge, p_MessageBuffer) < 0)
-                        {
-                            c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set auth challenge message!",
-                                         "CBGetLocation.cpp", __LINE__);
-                            
-                            e_State = NextState(e_State, true);
-                        }
-                        else
-                        {
-                            // Copy to use in next step
-                            memcpy(p_Salt, c_Challenge.p_Salt, MRH_SRV_SIZE_ACCOUNT_PASSWORD_SALT);
-                            u32_Nonce = c_Challenge.u32_Nonce;
-                            u8_HashType = c_Challenge.u8_HashType;
-                            
-                            e_State = NextState(e_State, false);
-                        }
-                        
-                        break;
-                    }
-                    else if (e_Recieved == MRH_SRV_S_MSG_AUTH_RESULT)
-                    {
-                        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to authenticate!",
+                        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set auth challenge message!",
                                      "CBGetLocation.cpp", __LINE__);
                         
-                        // Log error if possible
-                        MRH_SRV_S_MSG_AUTH_RESULT_DATA c_Result;
-                        if (MRH_SRV_SetNetMessage(&c_Result, p_MessageBuffer) == 0)
-                        {
-                            c_Logger.Log(MRH_PSBLogger::ERROR, "Auth request returned error: " +
-                                                               std::to_string(c_Result.u8_Result),
-                                         "CBGetLocation.cpp", __LINE__);
-                        }
-                        
-                        // Auth result here always means failure
                         e_State = NextState(e_State, true);
-                        break;
+                    }
+                    else
+                    {
+                        // Copy to use in next step
+                        memcpy(p_Salt, c_Challenge.p_Salt, MRH_SRV_SIZE_ACCOUNT_PASSWORD_SALT);
+                        u32_Nonce = c_Challenge.u32_Nonce;
+                        u8_HashType = c_Challenge.u8_HashType;
+                        
+                        e_State = NextState(e_State, false);
                     }
                 }
-                while (e_Recieved != MRH_SRV_CS_MSG_UNK);
-                
+                else if (e_Recieved == MRH_SRV_S_MSG_AUTH_RESULT)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to authenticate!",
+                                 "CBGetLocation.cpp", __LINE__);
+                    
+                    // Log error if possible
+                    MRH_SRV_S_MSG_AUTH_RESULT_DATA c_Result;
+                    if (MRH_SRV_SetNetMessage(&c_Result, p_MessageBuffer) == 0)
+                    {
+                        c_Logger.Log(MRH_PSBLogger::ERROR, "Auth request returned error: " +
+                                                           std::to_string(c_Result.u8_Result),
+                                     "CBGetLocation.cpp", __LINE__);
+                    }
+                    
+                    // Auth result here always means failure
+                    e_State = NextState(e_State, true);
+                }
                 break;
             }
             case AUTH_SEND_PROOF_CONNECTION:
             case AUTH_SEND_PROOF_COMMUNICATION:
             {
+                MRH_SRV_C_MSG_AUTH_PROOF_DATA c_Proof;
+                
+                uint8_t p_PasswordHash[MRH_SRV_SIZE_ACCOUNT_PASSWORD] = { '\0' };
+                
+                if ((i_Result = MRH_SRV_CreatePasswordHash(p_PasswordHash, p_Instance->p_AccountPassword, p_Salt, u8_HashType)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to create account password hash: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else if ((i_Result = MRH_SRV_EncryptNonce(c_Proof.p_NonceHash, u32_Nonce, p_PasswordHash)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to encrypt recieved nonce: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else if ((i_Result = MRH_SRV_SendMessage(p_Server, MRH_SRV_C_MSG_AUTH_PROOF, &c_Proof, NULL)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send auth proof net message: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
             case AUTH_RECIEVE_RESULT_CONNECTION:
             case AUTH_RECIEVE_RESULT_COMMUNICATION:
             {
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_S_MSG_AUTH_RESULT },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_CS_MSG_UNK)
+                {
+                    break;
+                }
+                
+                MRH_SRV_S_MSG_AUTH_RESULT_DATA c_Result;
+                
+                if ((i_Result = MRH_SRV_SetNetMessage(&c_Result, p_MessageBuffer)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set auth result message!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else if (c_Result.u8_Result != 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Auth request returned error: " +
+                                                       std::to_string(c_Result.u8_Result),
+                                 "CBGetLocation.cpp", __LINE__);
+                    i_Result = -1; // Set error
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
                 
@@ -393,10 +460,48 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 
             case CHANNEL_SEND_REQUEST:
             {
+                MRH_SRV_C_MSG_CHANNEL_REQUEST_DATA c_Request;
+                
+                strncpy(c_Request.p_Channel, p_Instance->p_ComServerChannel, MRH_SRV_SIZE_SERVER_CHANNEL);
+                
+                if ((i_Result = MRH_SRV_SendMessage(p_Server, MRH_SRV_C_MSG_CHANNEL_REQUEST, &c_Request, NULL)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send channel request message: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
             case CHANNEL_RECIEVE_RESPONSE:
             {
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_S_MSG_CHANNEL_RESPONSE },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_CS_MSG_UNK)
+                {
+                    break;
+                }
+                
+                MRH_SRV_S_MSG_CHANNEL_RESPONSE_DATA c_Response;
+                
+                if ((i_Result = MRH_SRV_SetNetMessage(&c_Response, p_MessageBuffer)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set channel response message!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else if (c_Response.u8_Result != 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Channel response returned error: " +
+                                                       std::to_string(c_Response.u8_Result),
+                                 "CBGetLocation.cpp", __LINE__);
+                    i_Result = -1; // Set error
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
                 
@@ -406,18 +511,114 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                 
             case CLIENT_RECIEVE_REQUEST:
             {
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_C_MSG_PAIR_REQUEST },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_CS_MSG_UNK)
+                {
+                    break;
+                }
+                
+                MRH_SRV_C_MSG_PAIR_REQUEST_DATA c_Request;
+                
+                if ((i_Result = MRH_SRV_SetNetMessage(&c_Request, p_MessageBuffer)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set pair request message!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else if (c_Request.u8_Actor != 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Pair request has wrong actor: " +
+                                                       std::to_string(c_Request.u8_Actor),
+                                 "CBGetLocation.cpp", __LINE__);
+                    i_Result = -1; // Set error
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
             case CLIENT_SEND_CHALLENGE:
             {
+                MRH_SRV_C_MSG_PAIR_CHALLENGE_DATA c_Challenge;
+                
+                c_Challenge.u8_Actor = MRH_SRV_CLIENT_PLATFORM;
+                c_Challenge.u32_Nonce = (u32_Nonce = rand() % ((uint32_t) - 1));
+                
+                if ((i_Result = MRH_SRV_SendMessage(p_Server, MRH_SRV_C_MSG_PAIR_CHALLENGE, &c_Challenge, NULL)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send pair challenge message: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
             case CLIENT_RECIEVE_PROOF:
             {
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_C_MSG_PAIR_PROOF },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_CS_MSG_UNK)
+                {
+                    break;
+                }
+                
+                MRH_SRV_C_MSG_PAIR_PROOF_DATA c_Proof;
+                
+                if ((i_Result = MRH_SRV_SetNetMessage(&c_Proof, p_MessageBuffer)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set pair proof message!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                else
+                {
+                    uint32_t u32_RecievedNonce;
+                    
+                    if (MRH_SRV_DecryptNonce(&u32_RecievedNonce, c_Proof.p_NonceHash, (uint8_t*)(p_Instance->p_DevicePassword)) < 0)
+                    {
+                        c_Logger.Log(MRH_PSBLogger::ERROR, "Pair proof has invalid nonce!",
+                                     "CBGetLocation.cpp", __LINE__);
+                        
+                        u8_PairResult = MRH_SRV_NET_MESSAGE_ERR_DA_PAIR;
+                    }
+                    else if (strncmp(c_Proof.p_DeviceKey, p_Instance->p_DeviceKey, MRH_SRV_SIZE_DEVICE_KEY) != 0)
+                    {
+                        c_Logger.Log(MRH_PSBLogger::ERROR, "Pair proof has invalid device key!",
+                                     "CBGetLocation.cpp", __LINE__);
+                        
+                        u8_PairResult = MRH_SRV_NET_MESSAGE_ERR_DA_PAIR;
+                    }
+                    else
+                    {
+                        u8_PairResult = MRH_SRV_NET_MESSAGE_ERR_NONE;
+                    }
+                    
+                    // Result OK, send pair result
+                    i_Result = 0;
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
             case CLIENT_SEND_RESULT:
             {
+                MRH_SRV_C_MSG_PAIR_RESULT_DATA c_Result;
+
+                c_Result.u8_Result = u8_PairResult;
+                
+                if ((i_Result = MRH_SRV_SendMessage(p_Server, MRH_SRV_C_MSG_PAIR_RESULT, &c_Result, NULL)) < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to send pair result message: " +
+                                                       std::string(MRH_ERR_GetServerErrorString()),
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
                 break;
             }
                 
@@ -426,11 +627,40 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
              */
                 
             case LOCATION_RECIEVE_FIRST_LOCATION:
-            {
-                break;
-            }
             case LOCATION_RECIEVE_CURRENT_LOCATION:
             {
+                e_Recieved = RecieveServerMessage(p_Server,
+                                                  { MRH_SRV_C_MSG_LOCATION },
+                                                  p_MessageBuffer,
+                                                  NULL);
+                
+                if (e_Recieved == MRH_SRV_C_MSG_LOCATION)
+                {
+                    MRH_SRV_C_MSG_LOCATION_DATA c_Location;
+                    
+                    if (MRH_SRV_SetNetMessage(&c_Location, p_MessageBuffer) < 0)
+                    {
+                        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set location message!",
+                                     "CBGetLocation.cpp", __LINE__);
+                    }
+                    else
+                    {
+                        std::lock_guard<std::mutex> c_Guard(p_Instance->c_LocationMutex);
+                        
+                        p_Instance->f64_Latitude = c_Location.f32_Latitude;
+                        p_Instance->f64_Longtitude = c_Location.f32_Longtitude;
+                        p_Instance->f64_Elevation = c_Location.f32_Elevation;
+                        p_Instance->f64_Facing = c_Location.f32_Facing;
+                        
+                        // Update state, now owns usable location
+                        if (e_State == LOCATION_RECIEVE_FIRST_LOCATION)
+                        {
+                            e_State = LOCATION_RECIEVE_CURRENT_LOCATION;
+                        }
+                    }
+                }
+                
+                std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ClientUpdateS));
                 break;
             }
                 

@@ -38,40 +38,110 @@ public:
     //*************************************************************************************
     // Constructor
     //*************************************************************************************
-
+    
     /**
-     *  Copy constructor. Disabled for this class.
-     *
-     *  \param c_Configuration Configuration class source.
+     *  Default constructor.
      */
 
-    Configuration(Configuration const& c_Configuration) = delete;
-    
-    //*************************************************************************************
-    // Singleton
-    //*************************************************************************************
+    Configuration();
 
     /**
-     *  Get the class instance.
-     *
-     *  \return The class instance.
+     *  Default destructor.
      */
 
-    static Configuration& Singleton() noexcept;
+    ~Configuration() noexcept;
     
-    //*************************************************************************************
-    // Load
-    //*************************************************************************************
-
-    /**
-     *  Load the configuration.
-     */
-    
-    void Load();
-
     //*************************************************************************************
     // Getters
     //*************************************************************************************
+    
+    /**
+     *  Get the source directory path.
+     *
+     *  \return The source directory path.
+     */
+    
+    std::string GetSourceDirectoryPath() const noexcept;
+    
+    /**
+     *  Get the content link directory path.
+     *
+     *  \return The content link directory path.
+     */
+    
+    std::string GetContentLinkDirectoryPath() const noexcept;
+    
+    /**
+     *  Get the package link directory path.
+     *
+     *  \return The package link directory path.
+     */
+    
+    std::string GetPackageLinkDirectoryPath() const noexcept;
+    
+    /**
+     *  Get the documents directory name.
+     *
+     *  \return The documents directory name.
+     */
+    
+    std::string GetDocumentsDirectory() const noexcept;
+    
+    /**
+     *  Get the pictures directory name.
+     *
+     *  \return The pictures directory name.
+     */
+    
+    std::string GetPicturesDirectory() const noexcept;
+    
+    /**
+     *  Get the music directory name.
+     *
+     *  \return The music directory name.
+     */
+    
+    std::string GetMusicDirectory() const noexcept;
+    
+    /**
+     *  Get the videos directory name.
+     *
+     *  \return The videos directory name.
+     */
+    
+    std::string GetVideosDirectory() const noexcept;
+    
+    /**
+     *  Get the downloads directory name.
+     *
+     *  \return The downloads directory name.
+     */
+    
+    std::string GetDownloadsDirectory() const noexcept;
+    
+    /**
+     *  Get the clipboard file name.
+     *
+     *  \return The clipboard file name.
+     */
+    
+    std::string GetClipboardFile() const noexcept;
+    
+    /**
+     *  Get the person info file name.
+     *
+     *  \return The person info file name.
+     */
+    
+    std::string GetInfoPersonFile() const noexcept;
+    
+    /**
+     *  Get the residence info file name.
+     *
+     *  \return The residence info name.
+     */
+    
+    std::string GetInfoResidenceFile() const noexcept;
     
     /**
      *  Get the server account mail.
@@ -79,7 +149,7 @@ public:
      *  \return The server account mail.
      */
     
-    std::string GetServerAccountMail() noexcept;
+    std::string GetServerAccountMail() const noexcept;
     
     /**
      *  Get the server account password.
@@ -87,7 +157,7 @@ public:
      *  \return The server account password.
      */
     
-    std::string GetServerAccountPassword() noexcept;
+    std::string GetServerAccountPassword() const noexcept;
     
     /**
      *  Get the server device key.
@@ -95,7 +165,7 @@ public:
      *  \return The server device key.
      */
     
-    std::string GetServerDeviceKey() noexcept;
+    std::string GetServerDeviceKey() const noexcept;
     
     /**
      *  Get the server device password.
@@ -103,7 +173,7 @@ public:
      *  \return The server device password.
      */
     
-    std::string GetServerDevicePassword() noexcept;
+    std::string GetServerDevicePassword() const noexcept;
     
     /**
      *  Get the server connection server address.
@@ -111,7 +181,7 @@ public:
      *  \return The server connection server address.
      */
     
-    std::string GetServerConnectionAddress() noexcept;
+    std::string GetServerConnectionAddress() const noexcept;
     
     /**
      *  Get the server connection server port.
@@ -119,7 +189,7 @@ public:
      *  \return The server connection server port.
      */
     
-    int GetServerConnectionPort() noexcept;
+    int GetServerConnectionPort() const noexcept;
     
     /**
      *  Get the server communication server channel.
@@ -127,7 +197,7 @@ public:
      *  \return The server communication server channel.
      */
     
-    std::string GetServerCommunicationChannel() noexcept;
+    std::string GetServerCommunicationChannel() const noexcept;
     
     /**
      *  Get the server timeout in seconds.
@@ -135,30 +205,39 @@ public:
      *  \return The server timeout in seconds.
      */
     
-    MRH_Uint32 GetServerTimeoutS() noexcept;
+    MRH_Uint32 GetServerTimeoutS() const noexcept;
+    
+    /**
+     *  Get the client update timer in seconds.
+     *
+     *  \return The client update timer in seconds.
+     */
+    
+    MRH_Uint32 GetServerClientUpdateS() const noexcept;
     
 private:
     
     //*************************************************************************************
-    // Constructor / Destructor
-    //*************************************************************************************
-
-    /**
-     *  Default constructor.
-     */
-
-    Configuration() noexcept;
-
-    /**
-     *  Default destructor.
-     */
-
-    ~Configuration() noexcept;
-
-    //*************************************************************************************
     // Data
     //**************************************************************************************
 
+    // Source Paths
+    std::string s_SourceDirPath;
+    
+    // Link Paths
+    std::string s_ContentLinkDirPath;
+    std::string s_PackageLinkDirPath;
+    
+    // User Content
+    std::string s_DocumentsDir;
+    std::string s_PicturesDir;
+    std::string s_MusicDir;
+    std::string s_VideosDir;
+    std::string s_DownloadsDir;
+    std::string s_ClipboardFile;
+    std::string s_InfoPersonFile;
+    std::string s_InfoResidenceFile;
+    
     // Server
     std::string s_ServerAccountMail;
     std::string s_ServerAccountPassword;
@@ -168,6 +247,7 @@ private:
     int i_ServerConnectionPort;
     std::string s_ServerCommunicationChannel;
     MRH_Uint32 u32_ServerTimeoutS;
+    MRH_Uint32 u32_ServerClientUpdateS;
     
 protected:
 

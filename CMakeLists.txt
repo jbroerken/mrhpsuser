@@ -79,16 +79,9 @@ set(SRC_LIST_CALLBACK "${SRC_DIR_PATH}/Callback/Service/CBAvail.cpp"
                       "${SRC_DIR_PATH}/Callback/Content/CBAccessClear.h"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.cpp"
                       "${SRC_DIR_PATH}/Callback/Location/CBGetLocation.h")
-                      
-if(USE_SERVER MATCHES ON)
-    set(SRC_LIST_CALLBACK ${SRC_LIST_CALLBACK}
-                          "${SRC_DIR_PATH}/Callback/Location/Server.cpp"
-                          "${SRC_DIR_PATH}/Callback/Location/Server.h")
-endif()
    
 set(SRC_LIST_CONTENT "${SRC_DIR_PATH}/Content/Content.cpp"
-                     "${SRC_DIR_PATH}/Content/Content.h"
-                     "${SRC_DIR_PATH}/Content/ContentPaths.h")
+                     "${SRC_DIR_PATH}/Content/Content.h")
                                         
 set(SRC_LIST_SERVICE "${SRC_DIR_PATH}/Configuration.cpp"
                      "${SRC_DIR_PATH}/Configuration.h"
@@ -122,7 +115,7 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 find_library(libmrhbf NAMES mrhbf REQUIRED)
 find_library(libmrhev NAMES mrhev REQUIRED)
-find_library(libmrhcevs NAMES mrhcevs REQUIRED)
+find_library(libmrhevdata NAMES mrhevdata REQUIRED)
 find_library(libmrhpsb NAMES mrhpsb REQUIRED)
 
 if(USE_SERVER MATCHES ON)
@@ -134,7 +127,7 @@ endif()
 target_link_libraries(mrhpsuser PUBLIC Threads::Threads)
 target_link_libraries(mrhpsuser PUBLIC mrhbf)
 target_link_libraries(mrhpsuser PUBLIC mrhev)
-target_link_libraries(mrhpsuser PUBLIC mrhcevs)
+target_link_libraries(mrhpsuser PUBLIC mrhevdata)
 target_link_libraries(mrhpsuser PUBLIC mrhpsb)
 
 if(USE_SERVER MATCHES ON)
@@ -155,25 +148,6 @@ endif()
 ###
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_SERVICE_THREAD_COUNT=1)
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CONFIGURATION_PATH="/usr/local/etc/mrh/mrhpservice/User.conf")
-
-target_compile_definitions(mrhpsuser PRIVATE MRH_PACKAGE_USER_DIRECTORY_SOURCE="/var/mrh/mrhpsuser/_User")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOCUMENTS_SOURCE_PATH="/var/mrh/mrhpsuser/Documents")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_PICTURES_SOURCE_PATH="/var/mrh/mrhpsuser/Pictures")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_VIDEOS_SOURCE_PATH="/var/mrh/mrhpsuser/Videos")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_MUSIC_SOURCE_PATH="/var/mrh/mrhpsuser/Music")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOWNLOADS_SOURCE_PATH="/var/mrh/mrhpsuser/Downloads")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CLIPBOARD_SOURCE_PATH="/var/mrh/mrhpsuser/Clipboard/Clipboard.txt")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_PERSON_SOURCE_PATH="/var/mrh/mrhpsuser/MRH_UserPerson.conf")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_RESIDENCE_SOURCE_PATH="/var/mrh/mrhpsuser/MRH_UserResidence.conf")
-
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOCUMENTS_LINK_PATH="/var/mrh/mrhpsuser/_User/Documents")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_PICTURES_LINK_PATH="/var/mrh/mrhpsuser/_User/Pictures")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_VIDEOS_LINK_PATH="/var/mrh/mrhpsuser/_User/Videos")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_MUSIC_LINK_PATH="/var/mrh/mrhpsuser/_User/Music")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_DOWNLOADS_LINK_PATH="/var/mrh/mrhpsuser/_User/Downloads")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CLIPBOARD_LINK_PATH="/var/mrh/mrhpsuser/_User/Clipboard.txt")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_PERSON_LINK_PATH="/var/mrh/mrhpsuser/_User/MRH_UserPerson.conf")
-target_compile_definitions(mrhpsuser PRIVATE MRH_USER_INFO_RESIDENCE_LINK_PATH="/var/mrh/mrhpsuser/_User/MRH_UserResidence.conf")
 
 if(USE_SERVER MATCHES ON)
     target_compile_definitions(mrhpsuser PRIVATE MRH_USER_LOCATION_USE_SERVER=1)

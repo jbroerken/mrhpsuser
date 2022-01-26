@@ -30,7 +30,7 @@
 // External
 
 // Project
-#include "../Exception.h"
+#include "../Configuration.h"
 
 
 class Content
@@ -64,9 +64,11 @@ public:
     
     /**
      *  Default constructor.
+     *
+     *  \param c_Configuration The configuration to construct with.
      */
     
-    Content();
+    Content(Configuration const& c_Configuration);
     
     /**
      *  Copy constructor. Disabled for this class.
@@ -265,8 +267,10 @@ private:
     std::mutex s_ResetMutex;
     std::atomic<bool> b_Reset;
     
-    // Current main dir link
+    // Link directory info
     std::string s_UserDirLinkPath;
+    std::string s_PackageLinkDirPath;
+    std::string s_ContentLinkDirPath;
     
     // Content links
     std::unordered_map<size_t, SymLink*> m_SymLink;

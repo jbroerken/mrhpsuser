@@ -27,13 +27,18 @@
 // Project
 #include "./CBGetLocation.h"
 
+// Pre-defined
+#ifndef SERVER_CONNECTION_WAIT_MULTIPLIER
+    #define SERVER_CONNECTION_WAIT_MULTIPLIER 10
+#endif
+
 
 //*************************************************************************************
 // Constructor / Destructor
 //*************************************************************************************
 
 #if MRH_USER_LOCATION_USE_SERVER > 0
-CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : e_ConnectionState(CONNECTION_STATE_MAX),
+CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : e_ConnectionState(CONNECT_CONNECTION),
                                                                               b_RunThread(true),
                                                                               f64_Latitude(0.f),
                                                                               f64_Longtitude(0.f),
@@ -75,6 +80,9 @@ CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : e_
     memset(p_ComServerAddress, '\0', MRH_SRV_SIZE_SERVER_CHANNEL);
     i_ComServerPort = -1;
     
+    u32_TimeoutS = c_Configuration.GetServerTimeoutS();
+    u32_ClientUpdateS = c_Configuration.GetServerClientUpdateS();
+    
     // Got connection info, now start updating client
     try
     {
@@ -113,7 +121,7 @@ void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) n
     MRH_EvD_U_GetLocation_S c_Data;
     
 #if MRH_USER_LOCATION_USE_SERVER > 0
-    if (e_ConnectionState != 0) // @TODO: Paired State
+    if (e_ConnectionState == LOCATION_RECIEVE_CURRENT_LOCATION)
     {
         c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
     }
@@ -171,9 +179,276 @@ void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) n
 #if MRH_USER_LOCATION_USE_SERVER > 0
 void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
 {
+    MRH_PSBLogger& c_Logger = MRH_PSBLogger::Singleton();
+    
+    /**
+     *  Library Init
+     */
+    
+    MRH_Srv_Context* p_Context = MRH_SRV_Init(MRH_SRV_CLIENT_PLATFORM,
+                                              1, /* Connection is replaced by communication server */
+                                              p_Instance->u32_TimeoutS);
+    
+    if (p_Context == NULL)
+    {
+        c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetServerErrorString(),
+                     "CBGetLocation.cpp", __LINE__);
+        return;
+    }
+    
+    MRH_Srv_Server* p_Server = MRH_SRV_CreateServer(p_Context, p_Instance->p_ComServerChannel);
+    
+    if (p_Server == NULL)
+    {
+        c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetServerErrorString(),
+                     "CBGetLocation.cpp", __LINE__);
+        
+        MRH_SRV_Destroy(p_Context);
+        return;
+    }
+    
+    /**
+     *  Client Update
+     */
+    
+    std::atomic<ConnectionState>& e_State = p_Instance->e_ConnectionState;
+    uint8_t p_Buffer[MRH_SRV_SIZE_MESSAGE_BUFFER];
+    
     while (p_Instance->b_RunThread == true)
     {
+        // Connection warning and reset
+        switch (e_State)
+        {
+            case CONNECT_CONNECTION:
+            case CONNECT_COMMUNICATION:
+            {
+                break;
+            }
+                
+            default:
+            {
+                c_Logger.Log(MRH_PSBLogger::INFO, "Connection lost, reconnecting...",
+                             "CBGetLocation.cpp", __LINE__);
+                
+                e_State = CONNECT_CONNECTION;
+                break;
+            }
+        }
         
+        // State update
+        switch (e_State)
+        {
+            /**
+             *  Server Connection
+             */
+                
+            case CONNECT_CONNECTION:
+            {
+                MRH_SRV_Disconnect(p_Server, -1); // Reset server object
+                
+                int i_Result = MRH_SRV_Connect(p_Context,
+                                               p_Server,
+                                               p_Instance->p_ConServerAddress,
+                                               p_Instance->i_ConServerPort,
+                                               p_Instance->u32_TimeoutS * SERVER_CONNECTION_WAIT_MULTIPLIER);
+                
+                if (i_Result < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to connect to connection server!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
+                break;
+            }
+            case CONNECT_COMMUNICATION:
+            {
+                MRH_SRV_Disconnect(p_Server, -1);
+                
+                int i_Result = MRH_SRV_Connect(p_Context,
+                                               p_Server,
+                                               p_Instance->p_ComServerAddress,
+                                               p_Instance->i_ComServerPort,
+                                               p_Instance->u32_TimeoutS * SERVER_CONNECTION_WAIT_MULTIPLIER);
+                
+                if (i_Result < 0)
+                {
+                    c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to connect to comunication server!",
+                                 "CBGetLocation.cpp", __LINE__);
+                }
+                
+                e_State = NextState(e_State, (i_Result < 0));
+                break;
+            }
+            
+            /**
+             *  Authentication
+             */
+                
+            case AUTH_SEND_REQUEST_CONNECTION:
+            case AUTH_SEND_REQUEST_COMMUNICATION:
+            {
+                break;
+            }
+            case AUTH_RECIEVE_CHALLENGE_CONNECTION:
+            case AUTH_RECIEVE_CHALLENGE_COMMUNICATION:
+            {
+                break;
+            }
+            case AUTH_SEND_PROOF_CONNECTION:
+            case AUTH_SEND_PROOF_COMMUNICATION:
+            {
+                break;
+            }
+            case AUTH_RECIEVE_RESULT_CONNECTION:
+            case AUTH_RECIEVE_RESULT_COMMUNICATION:
+            {
+                break;
+            }
+                
+            /**
+             *  Channel
+             */
+                
+            case CHANNEL_SEND_REQUEST:
+            {
+                break;
+            }
+            case CHANNEL_RECIEVE_RESPONSE:
+            {
+                break;
+            }
+                
+            /**
+             *  Client Pairing
+             */
+                
+            case CLIENT_RECIEVE_REQUEST:
+            {
+                break;
+            }
+            case CLIENT_SEND_CHALLENGE:
+            {
+                break;
+            }
+            case CLIENT_RECIEVE_PROOF:
+            {
+                break;
+            }
+            case CLIENT_SEND_RESULT:
+            {
+                break;
+            }
+                
+            /**
+             *  Location
+             */
+                
+            case LOCATION_RECIEVE_FIRST_LOCATION:
+            {
+                break;
+            }
+            case LOCATION_RECIEVE_CURRENT_LOCATION:
+            {
+                break;
+            }
+                
+            /**
+             *  Unk
+             */
+                
+            // Failed, unknown, etc
+            default:
+            {
+                c_Logger.Log(MRH_PSBLogger::ERROR, "Unknown client state, killing client!",
+                             "CBGetLocation.cpp", __LINE__);
+                
+                p_Instance->b_RunThread = false;
+                break;
+            }
+        }
+    }
+    
+    // All done, clean up
+    MRH_SRV_DestroyServer(p_Context, p_Server);
+    MRH_SRV_Destroy(p_Context);
+}
+
+CBGetLocation::ConnectionState CBGetLocation::NextState(ConnectionState e_State, bool b_Failed) noexcept
+{
+    switch (e_State)
+    {
+        // Server Connection
+        case CONNECT_CONNECTION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_SEND_REQUEST_CONNECTION;
+        case CONNECT_COMMUNICATION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_SEND_REQUEST_COMMUNICATION;
+            
+        // Authentication
+        case AUTH_SEND_REQUEST_CONNECTION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_RECIEVE_CHALLENGE_CONNECTION;
+        case AUTH_SEND_REQUEST_COMMUNICATION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_RECIEVE_CHALLENGE_COMMUNICATION;
+        case AUTH_RECIEVE_CHALLENGE_CONNECTION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_SEND_PROOF_CONNECTION;
+        case AUTH_RECIEVE_CHALLENGE_COMMUNICATION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_SEND_PROOF_COMMUNICATION;
+        case AUTH_SEND_PROOF_CONNECTION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_RECIEVE_RESULT_CONNECTION;
+        case AUTH_SEND_PROOF_COMMUNICATION:
+            return b_Failed ? CONNECT_CONNECTION : AUTH_RECIEVE_RESULT_COMMUNICATION;
+        case AUTH_RECIEVE_RESULT_CONNECTION:
+            return b_Failed ? CONNECT_CONNECTION : CHANNEL_SEND_REQUEST;
+        case AUTH_RECIEVE_RESULT_COMMUNICATION:
+            return b_Failed ? CONNECT_CONNECTION : CONNECT_COMMUNICATION;
+            
+        // Channel
+        case CHANNEL_SEND_REQUEST:
+            return b_Failed ? CONNECT_CONNECTION : CHANNEL_RECIEVE_RESPONSE;
+        case CHANNEL_RECIEVE_RESPONSE:
+            return b_Failed ? CONNECT_CONNECTION : CONNECT_COMMUNICATION;
+            
+        // Client Pairing
+        case CLIENT_RECIEVE_REQUEST:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : CLIENT_SEND_CHALLENGE;
+        case CLIENT_SEND_CHALLENGE:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : CLIENT_RECIEVE_PROOF;
+        case CLIENT_RECIEVE_PROOF:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : CLIENT_SEND_RESULT;
+        case CLIENT_SEND_RESULT:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : LOCATION_RECIEVE_FIRST_LOCATION;
+            
+        // Recieve Location
+        case LOCATION_RECIEVE_FIRST_LOCATION:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : LOCATION_RECIEVE_CURRENT_LOCATION;
+        case LOCATION_RECIEVE_CURRENT_LOCATION:
+            return b_Failed ? CLIENT_RECIEVE_REQUEST : LOCATION_RECIEVE_CURRENT_LOCATION;
+            
+        // Default
+        default:
+            return CONNECT_CONNECTION;
     }
 }
+
+MRH_Srv_NetMessage CBGetLocation::RecieveServerMessage(MRH_Srv_Server* p_Server, std::vector<MRH_Srv_NetMessage> v_Message, uint8_t* p_Buffer, const char* p_Password) noexcept
+{
+    MRH_Srv_NetMessage e_Message;
+    
+    while (true)
+    {
+        if ((e_Message = MRH_SRV_RecieveMessage(p_Server, p_Buffer, p_Password)) == MRH_SRV_CS_MSG_UNK)
+        {
+            return e_Message;
+        }
+        
+        for (auto& Message : v_Message)
+        {
+            if (Message == e_Message)
+            {
+                return e_Message;
+            }
+        }
+    }
+}
+
 #endif

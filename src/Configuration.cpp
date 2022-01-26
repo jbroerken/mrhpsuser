@@ -118,26 +118,55 @@ namespace
 // Constructor / Destructor
 //*************************************************************************************
 
-Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
-                                 s_ContentLinkDirPath("/var/mrh/mrhpsuser/_User/"),
-                                 s_PackageLinkDirPath("FSRoot/_User/"),
-                                 s_DocumentsDir("Documents"),
-                                 s_PicturesDir("Pictures"),
-                                 s_MusicDir("Music"),
-                                 s_VideosDir("Videos"),
-                                 s_DownloadsDir("Downloads"),
-                                 s_ClipboardFile("Clipboard.txt"),
-                                 s_InfoPersonFile("UserPerson.conf"),
-                                 s_InfoResidenceFile("UserResidence.conf"),
-                                 s_ServerAccountMail(""),
-                                 s_ServerAccountPassword(""),
-                                 s_ServerDeviceKey(""),
-                                 s_ServerDevicePassword(""),
-                                 s_ServerConnectionAddress("127.0.0.1"),
-                                 i_ServerConnectionPort(16096),
-                                 s_ServerCommunicationChannel("de.mrh.speech"),
-                                 u32_ServerTimeoutS(60)
+Configuration::Configuration() noexcept : s_SourceDirPath("/var/mrh/mrhpsuser/"),
+                                          s_ContentLinkDirPath("/var/mrh/mrhpsuser/_User/"),
+                                          s_PackageLinkDirPath("FSRoot/_User/"),
+                                          s_DocumentsDir("Documents"),
+                                          s_PicturesDir("Pictures"),
+                                          s_MusicDir("Music"),
+                                          s_VideosDir("Videos"),
+                                          s_DownloadsDir("Downloads"),
+                                          s_ClipboardFile("Clipboard.txt"),
+                                          s_InfoPersonFile("UserPerson.conf"),
+                                          s_InfoResidenceFile("UserResidence.conf"),
+                                          s_ServerAccountMail(""),
+                                          s_ServerAccountPassword(""),
+                                          s_ServerDeviceKey(""),
+                                          s_ServerDevicePassword(""),
+                                          s_ServerConnectionAddress("127.0.0.1"),
+                                          i_ServerConnectionPort(16096),
+                                          s_ServerCommunicationChannel("de.mrh.speech"),
+                                          u32_ServerTimeoutS(60)
+{}
+
+Configuration::~Configuration() noexcept
+{}
+
+//*************************************************************************************
+// Singleton
+//*************************************************************************************
+
+Configuration& Configuration::Singleton() noexcept
 {
+    static Configuration c_Configuration;
+    return c_Configuration;
+}
+
+//*************************************************************************************
+// Load
+//*************************************************************************************
+
+void Configuration::Load()
+{
+    static bool b_IsLoaded = false;
+    
+    if (b_IsLoaded == true)
+    {
+        throw Exception("Configuration already loaded! Reloading blocked to prevent issues.");
+    }
+    
+    b_IsLoaded = true;
+    
     try
     {
         MRH_BlockFile c_File(MRH_USER_CONFIGURATION_PATH);
@@ -199,104 +228,101 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
     }
 }
 
-Configuration::~Configuration() noexcept
-{}
-
 //*************************************************************************************
 // Getters
 //*************************************************************************************
 
-std::string Configuration::GetSourceDirectoryPath() const noexcept
+std::string Configuration::GetSourceDirectoryPath() noexcept
 {
     return s_SourceDirPath;
 }
 
-std::string Configuration::GetContentLinkDirectoryPath() const noexcept
+std::string Configuration::GetContentLinkDirectoryPath() noexcept
 {
     return s_ContentLinkDirPath;
 }
 
-std::string Configuration::GetPackageLinkDirectoryPath() const noexcept
+std::string Configuration::GetPackageLinkDirectoryPath() noexcept
 {
     return s_PackageLinkDirPath;
 }
 
-std::string Configuration::GetDocumentsDirectory() const noexcept
+std::string Configuration::GetDocumentsDirectory() noexcept
 {
     return s_DocumentsDir;
 }
 
-std::string Configuration::GetPicturesDirectory() const noexcept
+std::string Configuration::GetPicturesDirectory() noexcept
 {
     return s_PicturesDir;
 }
 
-std::string Configuration::GetMusicDirectory() const noexcept
+std::string Configuration::GetMusicDirectory() noexcept
 {
     return s_MusicDir;
 }
 
-std::string Configuration::GetVideosDirectory() const noexcept
+std::string Configuration::GetVideosDirectory() noexcept
 {
     return s_VideosDir;
 }
 
-std::string Configuration::GetDownloadsDirectory() const noexcept
+std::string Configuration::GetDownloadsDirectory() noexcept
 {
     return s_DownloadsDir;
 }
 
-std::string Configuration::GetClipboardFile() const noexcept
+std::string Configuration::GetClipboardFile() noexcept
 {
     return s_ClipboardFile;
 }
 
-std::string Configuration::GetInfoPersonFile() const noexcept
+std::string Configuration::GetInfoPersonFile() noexcept
 {
     return s_InfoPersonFile;
 }
 
-std::string Configuration::GetInfoResidenceFile() const noexcept
+std::string Configuration::GetInfoResidenceFile() noexcept
 {
     return s_InfoResidenceFile;
 }
 
-std::string Configuration::GetServerAccountMail() const noexcept
+std::string Configuration::GetServerAccountMail() noexcept
 {
     return s_ServerAccountMail;
 }
 
-std::string Configuration::GetServerAccountPassword() const noexcept
+std::string Configuration::GetServerAccountPassword() noexcept
 {
     return s_ServerAccountPassword;
 }
 
-std::string Configuration::GetServerDeviceKey() const noexcept
+std::string Configuration::GetServerDeviceKey() noexcept
 {
     return s_ServerDeviceKey;
 }
 
-std::string Configuration::GetServerDevicePassword() const noexcept
+std::string Configuration::GetServerDevicePassword() noexcept
 {
     return s_ServerDevicePassword;
 }
 
-std::string Configuration::GetServerConnectionAddress() const noexcept
+std::string Configuration::GetServerConnectionAddress() noexcept
 {
     return s_ServerConnectionAddress;
 }
 
-int Configuration::GetServerConnectionPort() const noexcept
+int Configuration::GetServerConnectionPort() noexcept
 {
     return i_ServerConnectionPort;
 }
 
-std::string Configuration::GetServerCommunicationChannel() const noexcept
+std::string Configuration::GetServerCommunicationChannel() noexcept
 {
     return s_ServerCommunicationChannel;
 }
 
-MRH_Uint32 Configuration::GetServerTimeoutS() const noexcept
+MRH_Uint32 Configuration::GetServerTimeoutS() noexcept
 {
     return u32_ServerTimeoutS;
 }

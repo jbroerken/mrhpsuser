@@ -38,19 +38,37 @@ public:
     //*************************************************************************************
     // Constructor
     //*************************************************************************************
-    
-    /**
-     *  Default constructor.
-     */
-
-    Configuration();
 
     /**
-     *  Default destructor.
+     *  Copy constructor. Disabled for this class.
+     *
+     *  \param c_Configuration Configuration class source.
      */
 
-    ~Configuration() noexcept;
+    Configuration(Configuration const& c_Configuration) = delete;
     
+    //*************************************************************************************
+    // Singleton
+    //*************************************************************************************
+
+    /**
+     *  Get the class instance.
+     *
+     *  \return The class instance.
+     */
+
+    static Configuration& Singleton() noexcept;
+    
+    //*************************************************************************************
+    // Load
+    //*************************************************************************************
+
+    /**
+     *  Load the configuration.
+     */
+    
+    void Load();
+
     //*************************************************************************************
     // Getters
     //*************************************************************************************
@@ -61,7 +79,7 @@ public:
      *  \return The source directory path.
      */
     
-    std::string GetSourceDirectoryPath() const noexcept;
+    std::string GetSourceDirectoryPath() noexcept;
     
     /**
      *  Get the content link directory path.
@@ -69,7 +87,7 @@ public:
      *  \return The content link directory path.
      */
     
-    std::string GetContentLinkDirectoryPath() const noexcept;
+    std::string GetContentLinkDirectoryPath() noexcept;
     
     /**
      *  Get the package link directory path.
@@ -77,7 +95,7 @@ public:
      *  \return The package link directory path.
      */
     
-    std::string GetPackageLinkDirectoryPath() const noexcept;
+    std::string GetPackageLinkDirectoryPath() noexcept;
     
     /**
      *  Get the documents directory name.
@@ -85,7 +103,7 @@ public:
      *  \return The documents directory name.
      */
     
-    std::string GetDocumentsDirectory() const noexcept;
+    std::string GetDocumentsDirectory() noexcept;
     
     /**
      *  Get the pictures directory name.
@@ -93,7 +111,7 @@ public:
      *  \return The pictures directory name.
      */
     
-    std::string GetPicturesDirectory() const noexcept;
+    std::string GetPicturesDirectory() noexcept;
     
     /**
      *  Get the music directory name.
@@ -101,7 +119,7 @@ public:
      *  \return The music directory name.
      */
     
-    std::string GetMusicDirectory() const noexcept;
+    std::string GetMusicDirectory() noexcept;
     
     /**
      *  Get the videos directory name.
@@ -109,7 +127,7 @@ public:
      *  \return The videos directory name.
      */
     
-    std::string GetVideosDirectory() const noexcept;
+    std::string GetVideosDirectory() noexcept;
     
     /**
      *  Get the downloads directory name.
@@ -117,7 +135,7 @@ public:
      *  \return The downloads directory name.
      */
     
-    std::string GetDownloadsDirectory() const noexcept;
+    std::string GetDownloadsDirectory() noexcept;
     
     /**
      *  Get the clipboard file name.
@@ -125,7 +143,7 @@ public:
      *  \return The clipboard file name.
      */
     
-    std::string GetClipboardFile() const noexcept;
+    std::string GetClipboardFile() noexcept;
     
     /**
      *  Get the person info file name.
@@ -133,7 +151,7 @@ public:
      *  \return The person info file name.
      */
     
-    std::string GetInfoPersonFile() const noexcept;
+    std::string GetInfoPersonFile() noexcept;
     
     /**
      *  Get the residence info file name.
@@ -141,7 +159,7 @@ public:
      *  \return The residence info name.
      */
     
-    std::string GetInfoResidenceFile() const noexcept;
+    std::string GetInfoResidenceFile() noexcept;
     
     /**
      *  Get the server account mail.
@@ -149,7 +167,7 @@ public:
      *  \return The server account mail.
      */
     
-    std::string GetServerAccountMail() const noexcept;
+    std::string GetServerAccountMail() noexcept;
     
     /**
      *  Get the server account password.
@@ -157,7 +175,7 @@ public:
      *  \return The server account password.
      */
     
-    std::string GetServerAccountPassword() const noexcept;
+    std::string GetServerAccountPassword() noexcept;
     
     /**
      *  Get the server device key.
@@ -165,7 +183,7 @@ public:
      *  \return The server device key.
      */
     
-    std::string GetServerDeviceKey() const noexcept;
+    std::string GetServerDeviceKey() noexcept;
     
     /**
      *  Get the server device password.
@@ -173,7 +191,7 @@ public:
      *  \return The server device password.
      */
     
-    std::string GetServerDevicePassword() const noexcept;
+    std::string GetServerDevicePassword() noexcept;
     
     /**
      *  Get the server connection server address.
@@ -181,7 +199,7 @@ public:
      *  \return The server connection server address.
      */
     
-    std::string GetServerConnectionAddress() const noexcept;
+    std::string GetServerConnectionAddress() noexcept;
     
     /**
      *  Get the server connection server port.
@@ -189,7 +207,7 @@ public:
      *  \return The server connection server port.
      */
     
-    int GetServerConnectionPort() const noexcept;
+    int GetServerConnectionPort() noexcept;
     
     /**
      *  Get the server communication server channel.
@@ -197,7 +215,7 @@ public:
      *  \return The server communication server channel.
      */
     
-    std::string GetServerCommunicationChannel() const noexcept;
+    std::string GetServerCommunicationChannel() noexcept;
     
     /**
      *  Get the server timeout in seconds.
@@ -205,10 +223,26 @@ public:
      *  \return The server timeout in seconds.
      */
     
-    MRH_Uint32 GetServerTimeoutS() const noexcept;
+    MRH_Uint32 GetServerTimeoutS() noexcept;
     
 private:
     
+    //*************************************************************************************
+    // Constructor / Destructor
+    //*************************************************************************************
+
+    /**
+     *  Default constructor.
+     */
+
+    Configuration() noexcept;
+
+    /**
+     *  Default destructor.
+     */
+
+    ~Configuration() noexcept;
+
     //*************************************************************************************
     // Data
     //**************************************************************************************

@@ -38,7 +38,7 @@
 
 // Pre-defined
 #ifndef MRH_USER_SERVICE_THREAD_COUNT
-    #define MRH_USER_SERVICE_THREAD_COUNT 1
+    #define MRH_USER_SERVICE_THREAD_COUNT 2
 #endif
 
 
@@ -70,23 +70,33 @@ int main(int argc, const char* argv[])
 {
     // Setup service base
     MRH_PSBLogger& c_Logger = MRH_PSBLogger::Singleton();
-    libmrhpsb* p_Context = NULL;
+    libmrhpsb* p_Context;
     
     try
     {
-        // Build library context first
+#if MRH_USER_LOCATION_USE_SERVER > 0
+        Configuration::Singleton().Load();
+#endif
         p_Context = new libmrhpsb("mrhpsuser",
                                   argc,
                                   argv,
                                   MRH_USER_SERVICE_THREAD_COUNT);
-        
-        // Next, load config for service data
-        Configuration c_Configuration;
-        
+    }
+    catch (MRH_PSBException& e)
+    {
+        return Exit(NULL, e.what(), EXIT_FAILURE);
+    }
+    catch (std::exception& e)
+    {
+        return Exit(NULL, e.what(), EXIT_FAILURE);
+    }
+    
+    try
+    {
         // Create the user content
-        std::shared_ptr<Content> p_Content(new Content(c_Configuration));
+        std::shared_ptr<Content> p_Content(new Content());
         
-        // Create callbacks
+        // Add callbacks
         std::shared_ptr<MRH_Callback> p_CBAvail(new CBAvail(p_Content));
         std::shared_ptr<MRH_Callback> p_CBReset(new CBReset(p_Content));
         std::shared_ptr<MRH_Callback> p_CBCustomCommand(new CBCustomCommand());
@@ -94,13 +104,8 @@ int main(int argc, const char* argv[])
         std::shared_ptr<MRH_Callback> p_CBAccessContent(new CBAccessContent(p_Content));
         std::shared_ptr<MRH_Callback> p_CBAccessClear(new CBAccessClear(p_Content));
         
-#if MRH_USER_LOCATION_USE_SERVER > 0
-        std::shared_ptr<MRH_Callback> p_CBGetLocation(new CBGetLocation(c_Configuration));
-#else
         std::shared_ptr<MRH_Callback> p_CBGetLocation(new CBGetLocation());
-#endif
         
-        // Add created callbacks
         p_Context->AddCallback(p_CBAvail, MRH_EVENT_USER_AVAIL_U);
         p_Context->AddCallback(p_CBReset, MRH_EVENT_PS_RESET_REQUEST_U);
         p_Context->AddCallback(p_CBCustomCommand, MRH_EVENT_USER_CUSTOM_COMMAND_U);
@@ -139,7 +144,6 @@ int main(int argc, const char* argv[])
     // Exit
     c_Logger.Log(MRH_PSBLogger::INFO, "Terminating service.",
                  "Main.cpp", __LINE__);
-    
     delete p_Context;
     return EXIT_SUCCESS;
 }

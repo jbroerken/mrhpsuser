@@ -22,6 +22,8 @@
 #ifndef CBGetLocation_h
 #define CBGetLocation_h
 
+#define MRH_USER_LOCATION_USE_SERVER 1
+
 // C / C++
 #if MRH_USER_LOCATION_USE_SERVER > 0
 #include <thread>
@@ -93,35 +95,20 @@ private:
     enum ConnectionState
     {
         // Server Connection
-        CONNECT_CONNECTION = 0,
-        CONNECT_COMMUNICATION = 1,
+        CONNECT = 0,
         
         // Authentication
-        AUTH_SEND_REQUEST_CONNECTION = 2,
-        AUTH_SEND_REQUEST_COMMUNICATION = 3,
-        AUTH_RECIEVE_CHALLENGE_CONNECTION = 4,
-        AUTH_RECIEVE_CHALLENGE_COMMUNICATION = 5,
-        AUTH_SEND_PROOF_CONNECTION = 6,
-        AUTH_SEND_PROOF_COMMUNICATION = 7,
-        AUTH_RECIEVE_RESULT_CONNECTION,
-        AUTH_RECIEVE_RESULT_COMMUNICATION,
-        
-        // Channel
-        CHANNEL_SEND_REQUEST,
-        CHANNEL_RECIEVE_RESPONSE,
-        
-        // Client Pairing
-        CLIENT_RECIEVE_REQUEST,
-        CLIENT_SEND_CHALLENGE,
-        CLIENT_RECIEVE_PROOF,
-        CLIENT_SEND_RESULT,
+        AUTH_SEND_REQUEST = 1,
+        AUTH_RECIEVE_CHALLENGE = 2,
+        AUTH_SEND_PROOF = 3,
+        AUTH_RECIEVE_RESULT = 4,
         
         // Recieve Location
-        LOCATION_RECIEVE_FIRST_LOCATION, // @NOTE: Used for connected, but not yet recieved (callback = false)
-        LOCATION_RECIEVE_CURRENT_LOCATION,
+        LOCATION_REQUEST_LOCATION = 5,
+        LOCATION_RECIEVE_LOCATION = 6,
         
         // Bounds
-        CONNECTION_STATE_MAX = LOCATION_RECIEVE_CURRENT_LOCATION,
+        CONNECTION_STATE_MAX = LOCATION_RECIEVE_LOCATION,
         
         CONNECTION_STATE_COUNT = CONNECTION_STATE_MAX + 1
     };
@@ -171,20 +158,14 @@ private:
     std::atomic<bool> b_RunThread;
     
     // Connection
-    std::atomic<ConnectionState> e_ConnectionState;
-    
     char p_AccountMail[MRH_SRV_SIZE_ACCOUNT_MAIL];
     char p_AccountPassword[MRH_SRV_SIZE_ACCOUNT_PASSWORD];
     
     char p_DeviceKey[MRH_SRV_SIZE_DEVICE_KEY];
     char p_DevicePassword[MRH_SRV_SIZE_DEVICE_PASSWORD];
     
-    char p_ConServerAddress[MRH_SRV_SIZE_SERVER_ADDRESS];
-    int i_ConServerPort;
-    
-    char p_ComServerChannel[MRH_SRV_SIZE_SERVER_CHANNEL];
-    char p_ComServerAddress[MRH_SRV_SIZE_SERVER_ADDRESS];
-    int i_ComServerPort;
+    char p_ServerAddress[MRH_SRV_SIZE_SERVER_ADDRESS];
+    int i_ServerPort;
     
     MRH_Uint32 u32_TimeoutS;
     MRH_Uint32 u32_ConnectionRetryS;
@@ -192,6 +173,7 @@ private:
 
     // Location
     std::mutex c_LocationMutex;
+    std::atomic<MRH_Uint64> u64_TimestampS;
 #endif
     MRH_Sfloat64 f64_Latitude;
     MRH_Sfloat64 f64_Longtitude;

@@ -176,28 +176,20 @@ public:
     std::string GetServerDevicePassword() const noexcept;
     
     /**
-     *  Get the server connection server address.
+     *  Get the server address.
      *
-     *  \return The server connection server address.
+     *  \return The server address.
      */
     
-    std::string GetServerConnectionAddress() const noexcept;
+    std::string GetServerAddress() const noexcept;
     
     /**
-     *  Get the server connection server port.
+     *  Get the server port.
      *
-     *  \return The server connection server port.
+     *  \return The server port.
      */
     
-    int GetServerConnectionPort() const noexcept;
-    
-    /**
-     *  Get the server communication server channel.
-     *
-     *  \return The server communication server channel.
-     */
-    
-    std::string GetServerCommunicationChannel() const noexcept;
+    int GetServerPort() const noexcept;
     
     /**
      *  Get the server timeout in seconds.
@@ -251,9 +243,8 @@ private:
     std::string s_ServerAccountPassword;
     std::string s_ServerDeviceKey;
     std::string s_ServerDevicePassword;
-    std::string s_ServerConnectionAddress;
-    int i_ServerConnectionPort;
-    std::string s_ServerCommunicationChannel;
+    std::string s_ServerAddress;
+    int i_ServerPort;
     MRH_Uint32 u32_ServerTimeoutS;
     MRH_Uint32 u32_ServerRetryWaitS;
     MRH_Uint32 u32_ServerClientUpdateS;

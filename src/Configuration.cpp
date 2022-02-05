@@ -65,9 +65,8 @@ namespace
         SERVER_ACCOUNT_PASSWORD,
         SERVER_DEVICE_KEY,
         SERVER_DEVICE_PASSWORD,
-        SERVER_CONNECTION_ADDRESS,
-        SERVER_CONNECTION_PORT,
-        SERVER_COMMUNICATION_CHANNEL,
+        SERVER_ADDRESS,
+        SERVER_PORT,
         SERVER_TIMEOUT_S,
         SERVER_RETRY_WAIT_S,
         SERVER_CLIENT_UPDATE_S,
@@ -108,9 +107,8 @@ namespace
         "AccountPassword",
         "DeviceKey",
         "DevicePassword",
-        "ConnectionAddress",
-        "ConnectionPort",
-        "CommunicationChannel",
+        "Address",
+        "Port",
         "TimeoutS",
         "RetryWaitS",
         "ClientUpdateS"
@@ -137,9 +135,8 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                                  s_ServerAccountPassword(""),
                                  s_ServerDeviceKey(""),
                                  s_ServerDevicePassword(""),
-                                 s_ServerConnectionAddress("127.0.0.1"),
-                                 i_ServerConnectionPort(16096),
-                                 s_ServerCommunicationChannel("de.mrh.speech"),
+                                 s_ServerAddress("127.0.0.1"),
+                                 i_ServerPort(16096),
                                  u32_ServerTimeoutS(60),
                                  u32_ServerRetryWaitS(300),
                                  u32_ServerClientUpdateS(300)
@@ -193,9 +190,8 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                 s_ServerAccountPassword = Block.GetValue(p_Identifier[SERVER_ACCOUNT_PASSWORD]);
                 s_ServerDeviceKey = Block.GetValue(p_Identifier[SERVER_DEVICE_KEY]);
                 s_ServerDevicePassword = Block.GetValue(p_Identifier[SERVER_DEVICE_PASSWORD]);
-                s_ServerConnectionAddress = Block.GetValue(p_Identifier[SERVER_CONNECTION_ADDRESS]);
-                i_ServerConnectionPort = std::stoi(Block.GetValue(p_Identifier[SERVER_CONNECTION_PORT]));
-                s_ServerCommunicationChannel = Block.GetValue(p_Identifier[SERVER_COMMUNICATION_CHANNEL]);
+                s_ServerAddress = Block.GetValue(p_Identifier[SERVER_ADDRESS]);
+                i_ServerPort = std::stoi(Block.GetValue(p_Identifier[SERVER_PORT]));
                 u32_ServerTimeoutS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_TIMEOUT_S])));
                 u32_ServerRetryWaitS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_RETRY_WAIT_S])));
                 u32_ServerClientUpdateS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_CLIENT_UPDATE_S])));
@@ -290,19 +286,14 @@ std::string Configuration::GetServerDevicePassword() const noexcept
     return s_ServerDevicePassword;
 }
 
-std::string Configuration::GetServerConnectionAddress() const noexcept
+std::string Configuration::GetServerAddress() const noexcept
 {
-    return s_ServerConnectionAddress;
+    return s_ServerAddress;
 }
 
-int Configuration::GetServerConnectionPort() const noexcept
+int Configuration::GetServerPort() const noexcept
 {
-    return i_ServerConnectionPort;
-}
-
-std::string Configuration::GetServerCommunicationChannel() const noexcept
-{
-    return s_ServerCommunicationChannel;
+    return i_ServerPort;
 }
 
 MRH_Uint32 Configuration::GetServerTimeoutS() const noexcept

@@ -428,14 +428,22 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
             }
             case LOCATION_RECIEVE_LOCATION:
             {
-                e_Recieved = RecieveServerMessage(p_Server,
-                                                  { MRH_SRV_MSG_NO_DATA,
-                                                    MRH_SRV_MSG_LOCATION },
-                                                  p_MessageBuffer,
-                                                  p_Instance->p_DevicePassword);
-                
-                if (e_Recieved == MRH_SRV_MSG_LOCATION)
+                while (true)
                 {
+                    e_Recieved = RecieveServerMessage(p_Server,
+                                                      { MRH_SRV_MSG_NO_DATA,
+                                                        MRH_SRV_MSG_LOCATION },
+                                                      p_MessageBuffer,
+                                                      p_Instance->p_DevicePassword);
+                    
+                    // No location available?
+                    if (e_Recieved == MRH_SRV_MSG_NO_DATA || e_Recieved == MRH_SRV_MSG_UNK)
+                    {
+                        std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ClientUpdateS));
+                        break;
+                    }
+                    
+                    // Got location, check
                     MRH_SRV_MSG_LOCATION_DATA c_Location;
                     
                     if (MRH_SRV_SetNetMessage(&c_Location, p_MessageBuffer) < 0)
@@ -447,25 +455,13 @@ void CBGetLocation::ClientUpdate(CBGetLocation* p_Instance) noexcept
                     {
                         std::lock_guard<std::mutex> c_Guard(p_Instance->c_LocationMutex);
                         
-                        p_Instance->u64_TimestampS = c_Location.u64_TimestampS;
-                        p_Instance->f64_Latitude = c_Location.f32_Latitude;
-                        p_Instance->f64_Longtitude = c_Location.f32_Longtitude;
-                        p_Instance->f64_Elevation = c_Location.f32_Elevation;
-                        p_Instance->f64_Facing = c_Location.f32_Facing;
-                    }
-                }
-                else if (e_Recieved == MRH_SRV_MSG_NO_DATA)
-                {
-                    MRH_SRV_MSG_NO_DATA_DATA c_NoData;
-                    
-                    if (MRH_SRV_SetNetMessage(&c_NoData, p_MessageBuffer) < 0)
-                    {
-                        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to set no data message!",
-                                     "CBGetLocation.cpp", __LINE__);
-                    }
-                    else if (c_NoData.u8_Data == MRH_SRV_MSG_LOCATION)
-                    {
-                        std::this_thread::sleep_for(std::chrono::seconds(p_Instance->u32_ClientUpdateS));
+                        if (p_Instance->u64_TimestampS < c_Location.u64_TimestampS)
+                        {
+                            p_Instance->f64_Latitude = c_Location.f32_Latitude;
+                            p_Instance->f64_Longtitude = c_Location.f32_Longtitude;
+                            p_Instance->f64_Elevation = c_Location.f32_Elevation;
+                            p_Instance->f64_Facing = c_Location.f32_Facing;
+                        }
                     }
                 }
                 break;

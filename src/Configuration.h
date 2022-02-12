@@ -144,76 +144,12 @@ public:
     std::string GetInfoResidenceFile() const noexcept;
     
     /**
-     *  Get the server account mail.
+     *  Get the full server socket path.
      *
-     *  \return The server account mail.
+     *  \return The full server socket path.
      */
     
-    std::string GetServerAccountMail() const noexcept;
-    
-    /**
-     *  Get the server account password.
-     *
-     *  \return The server account password.
-     */
-    
-    std::string GetServerAccountPassword() const noexcept;
-    
-    /**
-     *  Get the server device key.
-     *
-     *  \return The server device key.
-     */
-    
-    std::string GetServerDeviceKey() const noexcept;
-    
-    /**
-     *  Get the server device password.
-     *
-     *  \return The server device password.
-     */
-    
-    std::string GetServerDevicePassword() const noexcept;
-    
-    /**
-     *  Get the server address.
-     *
-     *  \return The server address.
-     */
-    
-    std::string GetServerAddress() const noexcept;
-    
-    /**
-     *  Get the server port.
-     *
-     *  \return The server port.
-     */
-    
-    int GetServerPort() const noexcept;
-    
-    /**
-     *  Get the server timeout in seconds.
-     *
-     *  \return The server timeout in seconds.
-     */
-    
-    MRH_Uint32 GetServerTimeoutS() const noexcept;
-    
-    /**
-     *  Get the server connection retry wait time in seconds.
-     *
-     *  \return The server connection retry wait time in seconds.
-     */
-    
-    MRH_Uint32 GetServerRetryWaitS() const noexcept;
-    
-    /**
-     *  Get the client update timer in seconds.
-     *
-     *  \return The client update timer in seconds.
-     */
-    
-    MRH_Uint32 GetServerClientUpdateS() const noexcept;
+    std::string GetServerSocketPath() const noexcept;
     
 private:
     
@@ -239,15 +175,7 @@ private:
     std::string s_InfoResidenceFile;
     
     // Server
-    std::string s_ServerAccountMail;
-    std::string s_ServerAccountPassword;
-    std::string s_ServerDeviceKey;
-    std::string s_ServerDevicePassword;
-    std::string s_ServerAddress;
-    int i_ServerPort;
-    MRH_Uint32 u32_ServerTimeoutS;
-    MRH_Uint32 u32_ServerRetryWaitS;
-    MRH_Uint32 u32_ServerClientUpdateS;
+    std::string s_ServerSocketPath;
     
 protected:
 

@@ -23,13 +23,6 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 14)
 
 ###
-#  CMake Options
-#  -------------
-#  Options to use when building with CMake.
-###
-option(USE_SERVER "Enable server based location recieving" ON)
-
-###
 #  Project Info
 #  ------------
 #  General simple information about our project.
@@ -117,29 +110,14 @@ find_library(libmrhbf NAMES mrhbf REQUIRED)
 find_library(libmrhev NAMES mrhev REQUIRED)
 find_library(libmrhevdata NAMES mrhevdata REQUIRED)
 find_library(libmrhpsb NAMES mrhpsb REQUIRED)
-
-if(USE_SERVER MATCHES ON)
-    find_library(libmsquic NAMES msquic REQUIRED)
-    find_library(libsodium NAMES sodium REQUIRED)
-    find_library(libmrhsrv NAMES mrhsrv REQUIRED)
-endif()
+find_library(libmrhmstream NAMES mrhmstream REQUIRED)
 
 target_link_libraries(mrhpsuser PUBLIC Threads::Threads)
 target_link_libraries(mrhpsuser PUBLIC mrhbf)
 target_link_libraries(mrhpsuser PUBLIC mrhev)
 target_link_libraries(mrhpsuser PUBLIC mrhevdata)
 target_link_libraries(mrhpsuser PUBLIC mrhpsb)
-
-if(USE_SERVER MATCHES ON)
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        target_link_libraries(mrhpsuser PUBLIC
-                              "-framework CoreFoundation"
-                              "-framework Security")
-    endif()
-    target_link_libraries(mrhpsuser PUBLIC msquic)
-    target_link_libraries(mrhpsuser PUBLIC sodium)
-    target_link_libraries(mrhpsuser PUBLIC mrhsrv)
-endif()
+target_link_libraries(mrhpsuser PUBLIC mrhmstream)
 
 ###
 #  Source Definitions
@@ -148,12 +126,6 @@ endif()
 ###
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_SERVICE_THREAD_COUNT=1)
 target_compile_definitions(mrhpsuser PRIVATE MRH_USER_CONFIGURATION_PATH="/usr/local/etc/mrh/mrhpservice/User.conf")
-
-if(USE_SERVER MATCHES ON)
-    target_compile_definitions(mrhpsuser PRIVATE MRH_USER_LOCATION_USE_SERVER=1)
-else()
-    target_compile_definitions(mrhpsuser PRIVATE MRH_USER_LOCATION_USE_SERVER=0)
-endif()
 
 ###
 #  Install

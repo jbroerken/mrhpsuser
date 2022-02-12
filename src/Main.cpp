@@ -94,11 +94,7 @@ int main(int argc, const char* argv[])
         std::shared_ptr<MRH_Callback> p_CBAccessContent(new CBAccessContent(p_Content));
         std::shared_ptr<MRH_Callback> p_CBAccessClear(new CBAccessClear(p_Content));
         
-#if MRH_USER_LOCATION_USE_SERVER > 0
         std::shared_ptr<MRH_Callback> p_CBGetLocation(new CBGetLocation(c_Configuration));
-#else
-        std::shared_ptr<MRH_Callback> p_CBGetLocation(new CBGetLocation());
-#endif
         
         // Add created callbacks
         p_Context->AddCallback(p_CBAvail, MRH_EVENT_USER_AVAIL_U);

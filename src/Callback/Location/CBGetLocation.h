@@ -23,18 +23,10 @@
 #define CBGetLocation_h
 
 // C / C++
-#if MRH_USER_LOCATION_USE_SERVER > 0
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <vector>
-#endif
 
 // External
 #include <libmrhpsb/MRH_Callback.h>
-#if MRH_USER_LOCATION_USE_SERVER > 0
-#include <libmrhsrv.h>
-#endif
+#include <libmrhmstream/MRH_MessageStream.h>
 
 // Project
 #include "../../Configuration.h"
@@ -48,7 +40,6 @@ public:
     // Constructor / Destructor
     //*************************************************************************************
     
-#if MRH_USER_LOCATION_USE_SERVER > 0
     /**
      *  Default constructor.
      *
@@ -56,13 +47,6 @@ public:
      */
     
     CBGetLocation(Configuration const& c_Configuration) noexcept;
-#else
-    /**
-     *  Default constructor.
-     */
-    
-    CBGetLocation() noexcept;
-#endif
     
     /**
      *  Default destructor.
@@ -86,93 +70,13 @@ public:
 private:
     
     //*************************************************************************************
-    // Types
-    //*************************************************************************************
-
-#if MRH_USER_LOCATION_USE_SERVER > 0
-    enum ConnectionState
-    {
-        // Server Connection
-        CONNECT = 0,
-        
-        // Authentication
-        AUTH_SEND_REQUEST = 1,
-        AUTH_RECIEVE_CHALLENGE = 2,
-        AUTH_SEND_PROOF = 3,
-        AUTH_RECIEVE_RESULT = 4,
-        
-        // Recieve Location
-        LOCATION_REQUEST_LOCATION = 5,
-        LOCATION_RECIEVE_LOCATION = 6,
-        
-        // Bounds
-        CONNECTION_STATE_MAX = LOCATION_RECIEVE_LOCATION,
-        
-        CONNECTION_STATE_COUNT = CONNECTION_STATE_MAX + 1
-    };
-    
-    //*************************************************************************************
-    // Client
-    //*************************************************************************************
-    
-    /**
-     *  Update the location platform client.
-     *
-     *  \param p_Instance The instance to update with.
-     */
-    
-    static void ClientUpdate(CBGetLocation* p_Instance) noexcept;
-    
-    /**
-     *  Get the next connection state.
-     *
-     *  \param e_State The current connection state.
-     *  \param b_Failed If the current state failed or not.
-     *
-     *  \return The next connection state.
-     */
-    
-    static ConnectionState NextState(ConnectionState e_State, bool b_Failed) noexcept;
-    
-    /**
-     *  Recieve a message from a server.
-     *
-     *  \param p_Server The server to recieve from.
-     *  \param v_Message The wanted messages.
-     *  \param p_Buffer The buffer used to store a wanted message.
-     *  \param p_Password The password to use for message decryption.
-     *
-     *  \return The first matching recieved message on success, MRH_SRV_CS_MSG_UNK on failure.
-     */
-    
-    static MRH_Srv_NetMessage RecieveServerMessage(MRH_Srv_Server* p_Server, std::vector<MRH_Srv_NetMessage> v_Message, uint8_t* p_Buffer, const char* p_Password) noexcept;
-    
-    //*************************************************************************************
     // Data
     //*************************************************************************************
     
-    // Thread
-    std::thread c_Thread;
-    std::atomic<bool> b_RunThread;
+    // Stream
+    MRH_MessageStream c_Stream;
     
-    // Connection
-    char p_AccountMail[MRH_SRV_SIZE_ACCOUNT_MAIL];
-    char p_AccountPassword[MRH_SRV_SIZE_ACCOUNT_PASSWORD];
-    
-    char p_DeviceKey[MRH_SRV_SIZE_DEVICE_KEY];
-    char p_DevicePassword[MRH_SRV_SIZE_DEVICE_PASSWORD];
-    
-    char p_ServerAddress[MRH_SRV_SIZE_SERVER_ADDRESS];
-    int i_ServerPort;
-    
-    MRH_Uint32 u32_TimeoutS;
-    MRH_Uint32 u32_ConnectionRetryS;
-    MRH_Uint32 u32_ClientUpdateS;
-
-    // Location
-    std::mutex c_LocationMutex;
-    std::atomic<MRH_Uint64> u64_TimestampS;
-#endif
+    // Last location
     MRH_Sfloat64 f64_Latitude;
     MRH_Sfloat64 f64_Longtitude;
     MRH_Sfloat64 f64_Elevation;

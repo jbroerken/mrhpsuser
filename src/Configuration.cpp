@@ -61,18 +61,10 @@ namespace
         USER_CONTENT_INFO_RESIDENCE,
         
         // Server Key
-        SERVER_ACCOUNT_MAIL,
-        SERVER_ACCOUNT_PASSWORD,
-        SERVER_DEVICE_KEY,
-        SERVER_DEVICE_PASSWORD,
-        SERVER_ADDRESS,
-        SERVER_PORT,
-        SERVER_TIMEOUT_S,
-        SERVER_RETRY_WAIT_S,
-        SERVER_CLIENT_UPDATE_S,
+        SERVER_SOCKET_PATH,
         
         // Bounds
-        IDENTIFIER_MAX = SERVER_CLIENT_UPDATE_S,
+        IDENTIFIER_MAX = SERVER_SOCKET_PATH,
 
         IDENTIFIER_COUNT = IDENTIFIER_MAX + 1
     };
@@ -103,15 +95,7 @@ namespace
         "InfoResidenceFile",
         
         // Server Key
-        "AccountMail",
-        "AccountPassword",
-        "DeviceKey",
-        "DevicePassword",
-        "Address",
-        "Port",
-        "TimeoutS",
-        "RetryWaitS",
-        "ClientUpdateS"
+        "SocketPath"
     };
 }
 
@@ -131,15 +115,7 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
                                  s_ClipboardFile("Clipboard.txt"),
                                  s_InfoPersonFile("UserPerson.conf"),
                                  s_InfoResidenceFile("UserResidence.conf"),
-                                 s_ServerAccountMail(""),
-                                 s_ServerAccountPassword(""),
-                                 s_ServerDeviceKey(""),
-                                 s_ServerDevicePassword(""),
-                                 s_ServerAddress("127.0.0.1"),
-                                 i_ServerPort(16096),
-                                 u32_ServerTimeoutS(60),
-                                 u32_ServerRetryWaitS(300),
-                                 u32_ServerClientUpdateS(300)
+                                 s_ServerSocketPath("/tmp/mrh/mrhpsuser_location.sock")
 {
     try
     {
@@ -186,15 +162,7 @@ Configuration::Configuration() : s_SourceDirPath("/var/mrh/mrhpsuser/"),
             }
             else if (Block.GetName().compare(p_Identifier[BLOCK_SERVER]) == 0)
             {
-                s_ServerAccountMail = Block.GetValue(p_Identifier[SERVER_ACCOUNT_MAIL]);
-                s_ServerAccountPassword = Block.GetValue(p_Identifier[SERVER_ACCOUNT_PASSWORD]);
-                s_ServerDeviceKey = Block.GetValue(p_Identifier[SERVER_DEVICE_KEY]);
-                s_ServerDevicePassword = Block.GetValue(p_Identifier[SERVER_DEVICE_PASSWORD]);
-                s_ServerAddress = Block.GetValue(p_Identifier[SERVER_ADDRESS]);
-                i_ServerPort = std::stoi(Block.GetValue(p_Identifier[SERVER_PORT]));
-                u32_ServerTimeoutS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_TIMEOUT_S])));
-                u32_ServerRetryWaitS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_RETRY_WAIT_S])));
-                u32_ServerClientUpdateS = static_cast<MRH_Uint32>(std::stoull(Block.GetValue(p_Identifier[SERVER_CLIENT_UPDATE_S])));
+                s_ServerSocketPath = Block.GetValue(p_Identifier[SERVER_SOCKET_PATH]);
             }
         }
     }
@@ -266,48 +234,7 @@ std::string Configuration::GetInfoResidenceFile() const noexcept
     return s_InfoResidenceFile;
 }
 
-std::string Configuration::GetServerAccountMail() const noexcept
+std::string Configuration::GetServerSocketPath() const noexcept
 {
-    return s_ServerAccountMail;
+    return s_ServerSocketPath;
 }
-
-std::string Configuration::GetServerAccountPassword() const noexcept
-{
-    return s_ServerAccountPassword;
-}
-
-std::string Configuration::GetServerDeviceKey() const noexcept
-{
-    return s_ServerDeviceKey;
-}
-
-std::string Configuration::GetServerDevicePassword() const noexcept
-{
-    return s_ServerDevicePassword;
-}
-
-std::string Configuration::GetServerAddress() const noexcept
-{
-    return s_ServerAddress;
-}
-
-int Configuration::GetServerPort() const noexcept
-{
-    return i_ServerPort;
-}
-
-MRH_Uint32 Configuration::GetServerTimeoutS() const noexcept
-{
-    return u32_ServerTimeoutS;
-}
-
-MRH_Uint32 Configuration::GetServerRetryWaitS() const noexcept
-{
-    return u32_ServerRetryWaitS;
-}
-
-MRH_Uint32 Configuration::GetServerClientUpdateS() const noexcept
-{
-    return u32_ServerClientUpdateS;
-}
-

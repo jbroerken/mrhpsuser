@@ -27,7 +27,6 @@ Dependency | Source
 ---------- | ------
 libmrhbf |  https://github.com/jbroerken/libmrhbf/
 libmrhevdata | https://github.com/jbroerken/libmrhevdata/
-libmrhev | https://github.com/jbroerken/libmrhev/
 libmrhpsb | https://github.com/jbroerken/libmrhpsb/
 mrhshared | https://github.com/jbroerken/mrhshared/
 

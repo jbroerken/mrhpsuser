@@ -23,10 +23,12 @@
 #define CBGetLocation_h
 
 // C / C++
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 // External
 #include <libmrhpsb/MRH_Callback.h>
-#include <libmrhmstream/MRH_MessageStream.h>
 
 // Project
 #include "../../Configuration.h"
@@ -46,7 +48,7 @@ public:
      *  \param c_Configuration The configuration to construct with.
      */
     
-    CBGetLocation(Configuration const& c_Configuration) noexcept;
+    CBGetLocation(Configuration const& c_Configuration);
     
     /**
      *  Default destructor.
@@ -70,13 +72,27 @@ public:
 private:
     
     //*************************************************************************************
+    // Stream
+    //*************************************************************************************
+    
+    /**
+     *  Update the location local stream.
+     *  
+     *  \param p_Instance The callback instance to update with.
+     *  \param s_FilePath The full path to the stream socket file.
+     */
+    
+    static void UpdateStream(CBGetLocation* p_Instance, std::string s_FilePath) noexcept;
+    
+    //*************************************************************************************
     // Data
     //*************************************************************************************
     
-    // Stream
-    MRH_MessageStream c_Stream;
+    std::thread c_Thread;
+    std::mutex c_Mutex;
+    std::atomic<bool> b_Update;
     
-    // Last location
+    bool b_LocationRecieved;
     MRH_Sfloat64 f64_Latitude;
     MRH_Sfloat64 f64_Longtitude;
     MRH_Sfloat64 f64_Elevation;

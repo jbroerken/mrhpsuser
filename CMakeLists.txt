@@ -110,14 +110,14 @@ find_library(libmrhbf NAMES mrhbf REQUIRED)
 find_library(libmrhev NAMES mrhev REQUIRED)
 find_library(libmrhevdata NAMES mrhevdata REQUIRED)
 find_library(libmrhpsb NAMES mrhpsb REQUIRED)
-find_library(libmrhmstream NAMES mrhmstream REQUIRED)
+find_library(libmrhls NAMES mrhls REQUIRED)
 
 target_link_libraries(mrhpsuser PUBLIC Threads::Threads)
 target_link_libraries(mrhpsuser PUBLIC mrhbf)
 target_link_libraries(mrhpsuser PUBLIC mrhev)
 target_link_libraries(mrhpsuser PUBLIC mrhevdata)
 target_link_libraries(mrhpsuser PUBLIC mrhpsb)
-target_link_libraries(mrhpsuser PUBLIC mrhmstream)
+target_link_libraries(mrhpsuser PUBLIC mrhls)
 
 ###
 #  Source Definitions

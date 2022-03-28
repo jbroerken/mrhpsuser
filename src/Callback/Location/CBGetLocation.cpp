@@ -23,7 +23,7 @@
 
 // External
 #include <libmrhpsb/MRH_PSBLogger.h>
-#include <libmrhmstream/MRH_MessageOpCode.h>
+#include <libmrhls.h>
 
 // Project
 #include "./CBGetLocation.h"
@@ -33,16 +33,30 @@
 // Constructor / Destructor
 //*************************************************************************************
 
-CBGetLocation::CBGetLocation(Configuration const& c_Configuration) noexcept : c_Stream(c_Configuration.GetServerSocketPath(),
-                                                                                       true),
-                                                                              f64_Latitude(0.f),
-                                                                              f64_Longtitude(0.f),
-                                                                              f64_Elevation(0.f),
-                                                                              f64_Facing(0.f)
-{}
+CBGetLocation::CBGetLocation(Configuration const& c_Configuration) : b_Update(true),
+                                                                     b_LocationRecieved(false),
+                                                                     f64_Latitude(0.f),
+                                                                     f64_Longtitude(0.f),
+                                                                     f64_Elevation(0.f),
+                                                                     f64_Facing(0.f)
+{
+    try
+    {
+        c_Thread = std::thread(UpdateStream, 
+                               this, 
+                               c_Configuration.GetServerSocketPath());
+    }
+    catch (std::exception& e)
+    {
+        throw Exception(e.what());
+    }
+}
 
 CBGetLocation::~CBGetLocation() noexcept
-{}
+{
+    b_Update = false;
+    c_Thread.join();
+}
 
 //*************************************************************************************
 // Callback
@@ -53,45 +67,23 @@ void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) n
     // Grab location data and availability
     MRH_EvD_U_GetLocation_S c_Data;
     
-    // Set initial failed result
-    c_Data.u8_Result = MRH_EVD_BASE_RESULT_FAILED;
+    c_Mutex.lock();
     
-    // Read all location messages
-    if (c_Stream.GetConnected() == true)
+    if (b_LocationRecieved == true)
     {
-        // Recieved data
-        MRH_MessageOpCode::LOCATION_C_LOCATION_DATA c_OpCode(0.f,
-                                                             0.f,
-                                                             0.f,
-                                                             0.f);
-        
-        // Recieve as many as possible!
-        while (c_Stream.Recieve(c_OpCode.v_Data) == true)
-        {
-            // Is this a usable opcode?
-            if (c_OpCode.GetOpCode() != MRH_MessageOpCode::LOCATION_C_LOCATION)
-            {
-                continue;
-            }
-            
-            // Update current
-            f64_Latitude = c_OpCode.GetLatitude();
-            f64_Longtitude = c_OpCode.GetLongtitude();
-            f64_Elevation = c_OpCode.GetFacing();
-            f64_Facing = c_OpCode.GetFacing();
-            
-            // We have valid data
-            if (c_Data.u8_Result == MRH_EVD_BASE_RESULT_FAILED)
-            {
-                c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
-            }
-        }
+        c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
+    }
+    else
+    {
+        c_Data.u8_Result = MRH_EVD_BASE_RESULT_SUCCESS;
     }
     
     c_Data.f64_Latitude = f64_Latitude;
     c_Data.f64_Longtitude = f64_Longtitude;
     c_Data.f64_Elevation = f64_Elevation;
     c_Data.f64_Facing = f64_Facing;
+    
+    c_Mutex.unlock();
     
     // Got location data, now create event
     MRH_Event* p_Result = MRH_EVD_CreateSetEvent(MRH_EVENT_USER_GET_LOCATION_S, &c_Data);
@@ -115,4 +107,81 @@ void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) n
         MRH_PSBLogger::Singleton().Log(MRH_PSBLogger::ERROR, e.what(),
                                        "CBGetLocation.cpp", __LINE__);
     }
+}
+
+//*************************************************************************************
+// Stream
+//*************************************************************************************
+
+void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePath) noexcept
+{
+    MRH_PSBLogger& c_Logger = MRH_PSBLogger::Singleton();
+    c_Logger.Log(MRH_PSBLogger::INFO, "Opening local stream: " +
+                                      s_FilePath,
+                 "CBGetLocation.cpp", __LINE__);
+    
+    // Build stream first
+    MRH_LocalStream* p_Stream = MRH_LS_Open(s_FilePath.c_str(), 0);
+    
+    if (p_Stream == NULL)
+    {
+        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to create local stream: " +
+                                           std::string(MRH_ERR_GetLocalStreamErrorString()),
+                     "CBGetLocation.cpp", __LINE__);
+        return;
+    }
+    
+    // Built now wait for connection
+    while (MRH_LS_Connect(p_Stream) < 0)
+    {
+        // Wait before retry if connection error
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    
+    MRH_LSM_Location_Data c_Location;
+    int i_Result;
+    
+    while (p_Instance->b_Update == true)
+    {
+        // Read data until a full message was read
+        while ((i_Result = MRH_LS_Read(p_Stream, 100)) != 0)
+        {
+            if (i_Result < 0)
+            {
+                c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to read local stream: " +
+                             std::string(MRH_ERR_GetLocalStreamErrorString()),
+                             "CBGetLocation.cpp", __LINE__);
+            }
+        }
+        
+        // Check message and get message data
+        if (MRH_LS_GetLastMessage(p_Stream) != MRH_LSM_LOCATION)
+        {
+            c_Logger.Log(MRH_PSBLogger::ERROR, "Recieved local stream message " +
+                                               std::to_string(MRH_LS_GetLastMessage(p_Stream)) +
+                                               ", but wanted " +
+                                               std::to_string(MRH_LSM_LOCATION),
+                         "CBGetLocation.cpp", __LINE__);
+            continue;
+        }
+        else if (MRH_LS_GetLastMessageData(p_Stream, &c_Location) < 0)
+        {
+            c_Logger.Log(MRH_PSBLogger::ERROR, "Failed get local stream message data: " +
+                                               std::string(MRH_ERR_GetLocalStreamErrorString()),
+                         "CBGetLocation.cpp", __LINE__);
+            continue;
+        }
+        
+        // Got data, update location
+        std::lock_guard<std::mutex> c_Guard(p_Instance->c_Mutex);
+        
+        p_Instance->b_LocationRecieved = true;
+        p_Instance->f64_Latitude = c_Location.f64_Latitude;
+        p_Instance->f64_Longtitude = c_Location.f64_Longtitude;
+        p_Instance->f64_Elevation = c_Location.f64_Elevation;
+        p_Instance->f64_Facing = c_Location.f64_Facing;
+    }
+    
+    // Termination, close stream
+    MRH_LS_Close(p_Stream);
 }

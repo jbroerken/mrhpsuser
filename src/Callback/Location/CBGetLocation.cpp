@@ -116,42 +116,79 @@ void CBGetLocation::Callback(const MRH_Event* p_Event, MRH_Uint32 u32_GroupID) n
 void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePath) noexcept
 {
     MRH_PSBLogger& c_Logger = MRH_PSBLogger::Singleton();
-    c_Logger.Log(MRH_PSBLogger::INFO, "Opening local stream: " +
-                                      s_FilePath,
-                 "CBGetLocation.cpp", __LINE__);
+    int i_Result;
     
     // Build stream first
+    c_Logger.Log(MRH_PSBLogger::INFO, "Opening local stream: " + s_FilePath,
+                 "CBGetLocation.cpp", __LINE__);
+    
     MRH_LocalStream* p_Stream = MRH_LS_Open(s_FilePath.c_str(), 0);
     
     if (p_Stream == NULL)
     {
-        c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to create local stream: " +
-                                           std::string(MRH_ERR_GetLocalStreamErrorString()),
+        c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
                      "CBGetLocation.cpp", __LINE__);
         return;
     }
     
-    // Built now wait for connection
-    while (MRH_LS_Connect(p_Stream) < 0)
-    {
-        // Wait before retry if connection error
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    
+    // Now start reading
     MRH_LSM_Location_Data c_Location;
-    int i_Result;
+    MRH_LSM_Version_Data c_Version;
+    c_Version.u32_Version = MRH_STREAM_MESSAGE_VERSION;
     
     while (p_Instance->b_Update == true)
     {
+        /**
+         *  Connect
+         */
+        
+        if (MRH_LS_GetConnected(p_Stream) < 0)
+        {
+            // Attempt to connect
+            if (MRH_LS_Connect(p_Stream) < 0)
+            {
+                // Wait before retry if connection error
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                continue;
+            }
+            
+            // Connected, add version info
+            if (MRH_LS_SetMessage(p_Stream, MRH_LSM_VERSION, &c_Version) < 0)
+            {
+                c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
+                             "CBGetLocation.cpp", __LINE__);
+            }
+            else
+            {
+                // Continue until fully written
+                while ((i_Result = MRH_LS_Write(p_Stream)) != 0)
+                {
+                    if (i_Result < 0)
+                    {
+                        c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
+                                     "CBGetLocation.cpp", __LINE__);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        /**
+         *  Read
+         */
+        
         // Read data until a full message was read
-        while ((i_Result = MRH_LS_Read(p_Stream, 100)) != 0)
+        if ((i_Result = MRH_LS_Read(p_Stream, 100)) != 0)
         {
             if (i_Result < 0)
             {
-                c_Logger.Log(MRH_PSBLogger::ERROR, "Failed to read local stream: " +
-                             std::string(MRH_ERR_GetLocalStreamErrorString()),
+                c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
                              "CBGetLocation.cpp", __LINE__);
+                MRH_LS_Disconnect(p_Stream);
             }
+            
+            // > 0 handled, not finished
+            continue;
         }
         
         // Check message and get message data
@@ -166,8 +203,7 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
         }
         else if (MRH_LS_GetLastMessageData(p_Stream, &c_Location) < 0)
         {
-            c_Logger.Log(MRH_PSBLogger::ERROR, "Failed get local stream message data: " +
-                                               std::string(MRH_ERR_GetLocalStreamErrorString()),
+            c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
                          "CBGetLocation.cpp", __LINE__);
             continue;
         }

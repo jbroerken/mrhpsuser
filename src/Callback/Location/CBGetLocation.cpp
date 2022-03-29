@@ -132,8 +132,12 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
     }
     
     // Now start reading
-    MRH_LSM_Location_Data c_Location;
-    MRH_LSM_Version_Data c_Version;
+    MRH_Uint8 p_Buffer[STREAM_MESSAGE_BUFFER_SIZE] = { '\0' };
+    MRH_Uint32 u32_Size;
+    
+    MRH_LS_M_Location_Data c_Location;
+    MRH_LS_M_Version_Data c_Version;
+    
     c_Version.u32_Version = MRH_STREAM_MESSAGE_VERSION;
     
     while (p_Instance->b_Update == true)
@@ -153,7 +157,7 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
             }
             
             // Connected, add version info
-            if (MRH_LS_SetMessage(p_Stream, MRH_LSM_VERSION, &c_Version) < 0)
+            if (MRH_LS_MessageToBuffer(p_Buffer, &u32_Size, MRH_LS_M_VERSION, &c_Version) < 0)
             {
                 c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
                              "CBGetLocation.cpp", __LINE__);
@@ -161,7 +165,7 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
             else
             {
                 // Continue until fully written
-                while ((i_Result = MRH_LS_Write(p_Stream)) != 0)
+                while ((i_Result = MRH_LS_Write(p_Stream, p_Buffer, u32_Size)) != 0)
                 {
                     if (i_Result < 0)
                     {
@@ -178,7 +182,7 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
          */
         
         // Read data until a full message was read
-        if ((i_Result = MRH_LS_Read(p_Stream, 100)) != 0)
+        if ((i_Result = MRH_LS_Read(p_Stream, 100, p_Buffer, &u32_Size)) != 0)
         {
             if (i_Result < 0)
             {
@@ -192,16 +196,13 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
         }
         
         // Check message and get message data
-        if (MRH_LS_GetLastMessage(p_Stream) != MRH_LSM_LOCATION)
+        if (MRH_LS_GetBufferMessage(p_Buffer) != MRH_LS_M_LOCATION)
         {
-            c_Logger.Log(MRH_PSBLogger::ERROR, "Recieved local stream message " +
-                                               std::to_string(MRH_LS_GetLastMessage(p_Stream)) +
-                                               ", but wanted " +
-                                               std::to_string(MRH_LSM_LOCATION),
+            c_Logger.Log(MRH_PSBLogger::ERROR, "Recieved invalid local stream message!",
                          "CBGetLocation.cpp", __LINE__);
             continue;
         }
-        else if (MRH_LS_GetLastMessageData(p_Stream, &c_Location) < 0)
+        else if (MRH_LS_BufferToMessage(&c_Location, p_Buffer, u32_Size) < 0)
         {
             c_Logger.Log(MRH_PSBLogger::ERROR, MRH_ERR_GetLocalStreamErrorString(),
                          "CBGetLocation.cpp", __LINE__);

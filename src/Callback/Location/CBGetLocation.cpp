@@ -132,7 +132,7 @@ void CBGetLocation::UpdateStream(CBGetLocation* p_Instance, std::string s_FilePa
     }
     
     // Now start reading
-    MRH_Uint8 p_Buffer[STREAM_MESSAGE_BUFFER_SIZE] = { '\0' };
+    MRH_Uint8 p_Buffer[MRH_STREAM_MESSAGE_BUFFER_SIZE] = { '\0' };
     MRH_Uint32 u32_Size;
     
     MRH_LS_M_Location_Data c_Location;

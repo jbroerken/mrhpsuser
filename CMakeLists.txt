@@ -27,7 +27,7 @@ set(CMAKE_CXX_STANDARD 14)
 #  ------------
 #  General simple information about our project.
 ###
-project(mrhpsuser VERSION 1.0.0
+project(mrhpsuser VERSION 1.0.1
                   DESCRIPTION "MRH user info platform service executable"
                   LANGUAGES CXX)
 
